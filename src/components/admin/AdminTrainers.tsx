@@ -127,29 +127,39 @@ const AdminTrainers = () => {
   });
 
   const handleAdd = () => {
-    setEditingItem(null);
-    setPhotoFile(null);
-    setPhotoPreview("");
-    setFormData({
-      name: "",
-      position: "",
-      description: "",
-      order: 0,
-    });
-    setIsDialogOpen(true);
+    try {
+      setEditingItem(null);
+      setPhotoFile(null);
+      setPhotoPreview("");
+      setFormData({
+        name: "",
+        position: "",
+        description: "",
+        order: 0,
+      });
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error("Error in handleAdd:", error);
+      toast.error("Ошибка при открытии формы");
+    }
   };
 
   const handleEdit = (coach: Coach) => {
-    setEditingItem(coach);
-    setPhotoPreview(resolveAssetUrl(coach.photo) || "");
-    setPhotoFile(null);
-    setFormData({
-      name: coach.name || "",
-      position: coach.position || "",
-      description: coach.description || "",
-      order: coach.order || 0,
-    });
-    setIsDialogOpen(true);
+    try {
+      setEditingItem(coach);
+      setPhotoPreview(resolveAssetUrl(coach.photo) || "");
+      setPhotoFile(null);
+      setFormData({
+        name: coach.name || "",
+        position: coach.position || "",
+        description: coach.description || "",
+        order: coach.order || 0,
+      });
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error("Error in handleEdit:", error);
+      toast.error("Ошибка при открытии формы редактирования");
+    }
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,25 +234,24 @@ const AdminTrainers = () => {
 
   return (
     <div className="space-y-4">
-      {isDialogOpen && (
-        <Dialog
-          open={isDialogOpen}
-          onOpenChange={(open) => {
-            setIsDialogOpen(open);
-            if (!open) {
-              setEditingItem(null);
-              setPhotoFile(null);
-              setPhotoPreview("");
-              setFormData({
-                name: "",
-                position: "",
-                description: "",
-                order: 0,
-              });
-              setIsUploading(false);
-            }
-          }}
-        >
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setEditingItem(null);
+            setPhotoFile(null);
+            setPhotoPreview("");
+            setFormData({
+              name: "",
+              position: "",
+              description: "",
+              order: 0,
+            });
+            setIsUploading(false);
+          }
+        }}
+      >
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -342,7 +351,6 @@ const AdminTrainers = () => {
             </form>
           </DialogContent>
         </Dialog>
-      )}
 
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Тренерский состав</h2>

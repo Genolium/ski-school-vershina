@@ -99,14 +99,24 @@ const AdminSchedule = () => {
     }
   };
 
-  const handleEdit = (item: ScheduleGroup) => {
-    setEditingItem(item);
-    setIsDialogOpen(true);
+  const handleAdd = () => {
+    try {
+      setEditingItem(null);
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error("Error in handleAdd:", error);
+      toast.error("Ошибка при открытии формы");
+    }
   };
 
-  const handleAdd = () => {
-    setEditingItem(null);
-    setIsDialogOpen(true);
+  const handleEdit = (item: ScheduleGroup) => {
+    try {
+      setEditingItem(item);
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error("Error in handleEdit:", error);
+      toast.error("Ошибка при открытии формы редактирования");
+    }
   };
 
   if (isLoading) {
@@ -115,14 +125,12 @@ const AdminSchedule = () => {
   
   return (
     <div className="space-y-4">
-      {isDialogOpen && (
-        <ScheduleDialog
-          open={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          editingItem={editingItem}
-          onSubmit={handleSubmit}
-        />
-      )}
+      <ScheduleDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        editingItem={editingItem}
+        onSubmit={handleSubmit}
+      />
 
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Расписание</h2>
