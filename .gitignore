@@ -111,7 +111,7 @@ coverage/
 *~
 
 # Project specific
-# Бинарные файлы бэкенда (если они попадают в корень)
-server
-backend/server
+# Бинарные файлы бэкенда (только бинарник, не папки)
+/backend/server
+/server
 

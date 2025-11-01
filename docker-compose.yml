@@ -33,7 +33,7 @@ services:
       - DB_PATH=/app/data/data.db
       - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173,https://www.ski-school-vershina.ru,https://ski-school-vershina.ru
+      - CORS_ORIGINS=http://localhost:3001,http://localhost:5173,https://www.ski-school-vershina.ru,https://ski-school-vershina.ru
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - DB_TYPE=${DB_TYPE:-postgres}
       - DB_HOST=${DB_HOST:-postgres}
@@ -66,7 +66,7 @@ services:
         - VITE_YANDEX_METRIKA_ID=${VITE_YANDEX_METRIKA_ID:-}
     container_name: ski-school-frontend
     ports:
-      - "3000:80"
+      - "3001:80"
     depends_on:
       backend:
         condition: service_healthy
