@@ -1,17 +1,18 @@
 package handlers
 
 import (
+	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
 	"ski-school-backend/internal/database"
 	"ski-school-backend/internal/models"
-	"github.com/gin-gonic/gin"
+	"ski-school-backend/internal/services"
+	"strconv"
 )
 
 // CRUD для расписания
 func AdminGetSchedule(c *gin.Context) {
 	var groups []models.ScheduleGroup
-	if err := database.DB.Order("`order` ASC").Find(&groups).Error; err != nil {
+	if err := database.DB.Order(database.GetOrderClause() + " ASC").Find(&groups).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to fetch schedule")
 		return
 	}
@@ -24,18 +25,19 @@ func AdminCreateSchedule(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
-	
+
 	// Проверка длины строк
 	if !ValidateStringLength(group.Group, 1, 200) || !ValidateStringLength(group.AgeRange, 1, 50) {
 		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
 		return
 	}
-	
+
 	if err := database.DB.Create(&group).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to create schedule group")
 		return
 	}
-	
+
+	services.InvalidateCache("schedule")
 	LogAdminAction(c, "CREATE", "schedule", group.ID)
 	c.JSON(http.StatusCreated, group)
 }
@@ -51,17 +53,18 @@ func AdminUpdateSchedule(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
-	
+
 	if !ValidateStringLength(group.Group, 1, 200) || !ValidateStringLength(group.AgeRange, 1, 50) {
 		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
 		return
 	}
-	
+
 	if err := database.DB.Save(&group).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to update schedule group")
 		return
 	}
-	
+
+	services.InvalidateCache("schedule")
 	LogAdminAction(c, "UPDATE", "schedule", group.ID)
 	c.JSON(http.StatusOK, group)
 }
@@ -72,6 +75,7 @@ func AdminDeleteSchedule(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to delete schedule group")
 		return
 	}
+	services.InvalidateCache("schedule")
 	LogAdminAction(c, "DELETE", "schedule", uint(id))
 	c.JSON(http.StatusOK, gin.H{"message": "Schedule group deleted"})
 }
@@ -79,7 +83,7 @@ func AdminDeleteSchedule(c *gin.Context) {
 // CRUD для локаций
 func AdminGetLocations(c *gin.Context) {
 	var locations []models.Location
-	if err := database.DB.Order("`order` ASC").Find(&locations).Error; err != nil {
+	if err := database.DB.Order(database.GetOrderClause() + " ASC").Find(&locations).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to fetch locations")
 		return
 	}
@@ -92,17 +96,18 @@ func AdminCreateLocation(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
-	
+
 	if !ValidateStringLength(location.Title, 1, 200) || !ValidateStringLength(location.Address, 1, 500) {
 		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
 		return
 	}
-	
+
 	if err := database.DB.Create(&location).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to create location")
 		return
 	}
-	
+
+	services.InvalidateCache("locations")
 	LogAdminAction(c, "CREATE", "location", location.ID)
 	c.JSON(http.StatusCreated, location)
 }
@@ -118,17 +123,18 @@ func AdminUpdateLocation(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
-	
+
 	if !ValidateStringLength(location.Title, 1, 200) || !ValidateStringLength(location.Address, 1, 500) {
 		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
 		return
 	}
-	
+
 	if err := database.DB.Save(&location).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to update location")
 		return
 	}
-	
+
+	services.InvalidateCache("locations")
 	LogAdminAction(c, "UPDATE", "location", location.ID)
 	c.JSON(http.StatusOK, location)
 }
@@ -139,6 +145,7 @@ func AdminDeleteLocation(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to delete location")
 		return
 	}
+	services.InvalidateCache("locations")
 	LogAdminAction(c, "DELETE", "location", uint(id))
 	c.JSON(http.StatusOK, gin.H{"message": "Location deleted"})
 }
@@ -159,17 +166,18 @@ func AdminCreateCamp(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
-	
+
 	if !ValidateStringLength(camp.Title, 1, 200) || !ValidateStringLength(camp.Location, 1, 500) {
 		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
 		return
 	}
-	
+
 	if err := database.DB.Create(&camp).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to create camp")
 		return
 	}
-	
+
+	services.InvalidateCache("camps")
 	LogAdminAction(c, "CREATE", "camp", camp.ID)
 	c.JSON(http.StatusCreated, camp)
 }
@@ -185,17 +193,18 @@ func AdminUpdateCamp(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
-	
+
 	if !ValidateStringLength(camp.Title, 1, 200) || !ValidateStringLength(camp.Location, 1, 500) {
 		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
 		return
 	}
-	
+
 	if err := database.DB.Save(&camp).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to update camp")
 		return
 	}
-	
+
+	services.InvalidateCache("camps")
 	LogAdminAction(c, "UPDATE", "camp", camp.ID)
 	c.JSON(http.StatusOK, camp)
 }
@@ -206,6 +215,7 @@ func AdminDeleteCamp(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to delete camp")
 		return
 	}
+	services.InvalidateCache("camps")
 	LogAdminAction(c, "DELETE", "camp", uint(id))
 	c.JSON(http.StatusOK, gin.H{"message": "Camp deleted"})
 }
@@ -213,7 +223,7 @@ func AdminDeleteCamp(c *gin.Context) {
 // CRUD для статистики
 func AdminGetStats(c *gin.Context) {
 	var stats []models.Statistic
-	if err := database.DB.Order("`order` ASC").Find(&stats).Error; err != nil {
+	if err := database.DB.Order(database.GetOrderClause() + " ASC").Find(&stats).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to fetch statistics")
 		return
 	}
@@ -226,17 +236,18 @@ func AdminCreateStat(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
-	
+
 	if !ValidateStringLength(stat.Label, 1, 200) || !ValidateStringLength(stat.Value, 1, 50) {
 		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
 		return
 	}
-	
+
 	if err := database.DB.Create(&stat).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to create statistic")
 		return
 	}
-	
+
+	services.InvalidateCache("stats")
 	LogAdminAction(c, "CREATE", "statistic", stat.ID)
 	c.JSON(http.StatusCreated, stat)
 }
@@ -252,17 +263,18 @@ func AdminUpdateStat(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
-	
+
 	if !ValidateStringLength(stat.Label, 1, 200) || !ValidateStringLength(stat.Value, 1, 50) {
 		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
 		return
 	}
-	
+
 	if err := database.DB.Save(&stat).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to update statistic")
 		return
 	}
-	
+
+	services.InvalidateCache("stats")
 	LogAdminAction(c, "UPDATE", "statistic", stat.ID)
 	c.JSON(http.StatusOK, stat)
 }
@@ -273,6 +285,7 @@ func AdminDeleteStat(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to delete statistic")
 		return
 	}
+	services.InvalidateCache("stats")
 	LogAdminAction(c, "DELETE", "statistic", uint(id))
 	c.JSON(http.StatusOK, gin.H{"message": "Statistic deleted"})
 }
@@ -293,17 +306,18 @@ func AdminCreateAbout(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
-	
+
 	if !ValidateStringLength(about.Title, 1, 500) {
 		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
 		return
 	}
-	
+
 	if err := database.DB.Create(&about).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to create about content")
 		return
 	}
-	
+
+	services.InvalidateCache("about")
 	LogAdminAction(c, "CREATE", "about", about.ID)
 	c.JSON(http.StatusCreated, about)
 }
@@ -319,18 +333,18 @@ func AdminUpdateAbout(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
-	
+
 	if !ValidateStringLength(about.Title, 1, 500) {
 		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
 		return
 	}
-	
+
 	if err := database.DB.Save(&about).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to update about content")
 		return
 	}
-	
+
+	services.InvalidateCache("about")
 	LogAdminAction(c, "UPDATE", "about", about.ID)
 	c.JSON(http.StatusOK, about)
 }
-

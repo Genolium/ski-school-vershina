@@ -68,11 +68,11 @@ const About = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-16">
           {(stats.length ? stats : [
-            { value: "25", label: "лет работы", suffix: "+", icon_type: "Trophy" },
-            { value: "150", label: "воспитанников", suffix: "+", icon_type: "Users" },
-            { value: "50", label: "побед в сезоне", suffix: "+", icon_type: "Award" },
-            { value: "100", label: "довольных родителей", suffix: "%", icon_type: "Target" },
-          ] as any).map((stat: any, index: number) => (
+            { value: "25", label: "лет работы", suffix: "+", icon_type: "Trophy", id: 0, order: 0 },
+            { value: "150", label: "воспитанников", suffix: "+", icon_type: "Users", id: 1, order: 1 },
+            { value: "50", label: "побед в сезоне", suffix: "+", icon_type: "Award", id: 2, order: 2 },
+            { value: "100", label: "довольных родителей", suffix: "%", icon_type: "Target", id: 3, order: 3 },
+          ] as Statistic[]).map((stat: Statistic, index: number) => (
             <ScrollReveal key={index} delay={index * 100}>
             <div
               className="bg-gradient-hero text-ski-white rounded-lg md:rounded-xl p-4 md:p-6 text-center hover:scale-105 transition-transform duration-300 shadow-ski"

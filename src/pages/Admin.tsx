@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { adminLogin } from "@/lib/api";
-import { getAuthToken, setAuthToken, removeAuthToken, isTokenExpired } from "@/lib/auth";
+import { getAuthToken, setAuthToken, setRefreshToken, removeAuthToken, isTokenExpired } from "@/lib/auth";
 import AdminApplications from "@/components/admin/AdminApplications";
 import AdminSchedule from "@/components/admin/AdminSchedule";
 import AdminLocations from "@/components/admin/AdminLocations";
@@ -12,6 +12,7 @@ import AdminCamps from "@/components/admin/AdminCamps";
 import AdminStats from "@/components/admin/AdminStats";
 import AdminAbout from "@/components/admin/AdminAbout";
 import AdminTrainers from "@/components/admin/AdminTrainers";
+import AdminMedia from "@/components/admin/AdminMedia";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -41,8 +42,9 @@ const Admin = () => {
     e.preventDefault();
     setError("");
     try {
-      const { token } = await adminLogin(username, password);
-      setAuthToken(token);
+      const { access_token, refresh_token } = await adminLogin(username, password);
+      setAuthToken(access_token);
+      setRefreshToken(refresh_token);
       setIsAuthenticated(true);
       toast.success("Вход выполнен успешно");
     } catch (err) {
@@ -145,7 +147,7 @@ const Admin = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               <Tabs defaultValue="applications" className="space-y-4">
-                 <TabsList className="grid w-full grid-cols-7">
+                 <TabsList className="grid w-full grid-cols-8">
                    <TabsTrigger value="applications">Заявки</TabsTrigger>
                    <TabsTrigger value="schedule">Расписание</TabsTrigger>
                    <TabsTrigger value="locations">Локации</TabsTrigger>
@@ -153,6 +155,7 @@ const Admin = () => {
                    <TabsTrigger value="stats">Статистика</TabsTrigger>
                    <TabsTrigger value="about">О нас</TabsTrigger>
                    <TabsTrigger value="trainers">Тренеры</TabsTrigger>
+                   <TabsTrigger value="media">Медиа</TabsTrigger>
                  </TabsList>
 
           <TabsContent value="applications">
@@ -181,6 +184,10 @@ const Admin = () => {
 
                  <TabsContent value="trainers">
                    <AdminTrainers />
+                 </TabsContent>
+
+                 <TabsContent value="media">
+                   <AdminMedia />
                  </TabsContent>
                </Tabs>
              </div>

@@ -4,6 +4,7 @@ import { Calendar, Clock, Users, ArrowRight } from "lucide-react";
 import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
 import { getSchedule, type ScheduleGroup } from "@/lib/api";
+import { logError } from "@/lib/errorHandler";
 
 const Schedule = () => {
   const [scheduleData, setScheduleData] = useState<ScheduleGroup[]>([]);
@@ -15,8 +16,8 @@ const Schedule = () => {
         setScheduleData(data);
         setLoading(false);
       })
-      .catch(() => {
-        // Возврат к пустому массиву при ошибке API
+      .catch((error) => {
+        logError(error, 'Schedule component');
         setScheduleData([]);
         setLoading(false);
       });

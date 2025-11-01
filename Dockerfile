@@ -10,9 +10,11 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build arguments for API URL
+# Build arguments for API URL and Metrika
 ARG VITE_API_URL=/api
+ARG VITE_YANDEX_METRIKA_ID
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_YANDEX_METRIKA_ID=$VITE_YANDEX_METRIKA_ID
 
 # Build the application
 RUN npm run build

@@ -77,6 +77,19 @@ export interface Coach {
   order: number;
 }
 
+export interface Media {
+  id: number;
+  title: string;
+  description: string;
+  file_path: string;
+  media_type: 'photo' | 'video';
+  category: string;
+  event_date?: string;
+  order: number;
+  is_active: boolean;
+  created_at: string;
+}
+
 export async function getSchedule(): Promise<ScheduleGroup[]> {
   const response = await fetch(`${API_URL}/schedule`);
   if (!response.ok) throw new Error('Failed to fetch schedule');
@@ -135,13 +148,23 @@ export async function createApplication(data: Omit<Application, 'id' | 'status' 
 // Функции админ API
 const ADMIN_API_URL = `${API_URL}/admin`;
 
-export async function adminLogin(username: string, password: string): Promise<{ token: string }> {
+export async function adminLogin(username: string, password: string): Promise<{ access_token: string; refresh_token: string; user: { id: number; username: string; role: string } }> {
   const response = await fetch(`${ADMIN_API_URL}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
   });
   if (!response.ok) throw new Error('Failed to login');
+  return response.json();
+}
+
+export async function adminRefreshToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
+  const response = await fetch(`${ADMIN_API_URL}/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+  if (!response.ok) throw new Error('Failed to refresh token');
   return response.json();
 }
 
@@ -380,5 +403,53 @@ export async function uploadPhoto(file: File): Promise<{ url: string }> {
   
   if (!response.ok) throw new Error('Failed to upload photo');
   return response.json();
+}
+
+// Медиа-галерея
+export async function getMedia(params?: { category?: string; type?: 'photo' | 'video' }): Promise<Media[]> {
+  const queryParams = new URLSearchParams();
+  if (params?.category) queryParams.append('category', params.category);
+  if (params?.type) queryParams.append('type', params.type);
+  
+  const url = `${API_URL}/media${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Failed to fetch media');
+  return response.json();
+}
+
+export async function adminGetMedia(params?: { category?: string; type?: 'photo' | 'video' }): Promise<Media[]> {
+  const queryParams = new URLSearchParams();
+  if (params?.category) queryParams.append('category', params.category);
+  if (params?.type) queryParams.append('type', params.type);
+  
+  const url = `${ADMIN_API_URL}/media${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const response = await authenticatedFetch(url);
+  if (!response.ok) throw new Error('Failed to fetch media');
+  return response.json();
+}
+
+export async function createMedia(data: Omit<Media, 'id' | 'created_at'>): Promise<Media> {
+  const response = await authenticatedFetch(`${ADMIN_API_URL}/media`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Failed to create media');
+  return response.json();
+}
+
+export async function updateMedia(id: number, data: Partial<Media>): Promise<Media> {
+  const response = await authenticatedFetch(`${ADMIN_API_URL}/media/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Failed to update media');
+  return response.json();
+}
+
+export async function deleteMedia(id: number): Promise<void> {
+  const response = await authenticatedFetch(`${ADMIN_API_URL}/media/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Failed to delete media');
 }
 

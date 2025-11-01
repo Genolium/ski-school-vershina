@@ -5,6 +5,7 @@ import Locations from "@/components/Locations";
 import About from "@/components/About";
 import Camps from "@/components/Camps";
 import ContactForm from "@/components/ContactForm";
+import Gallery from "@/components/Gallery";
 
 const Index = () => {
   return (
@@ -15,6 +16,7 @@ const Index = () => {
       <Locations />
       <About />
       <Camps />
+      <Gallery />
       <ContactForm />
       
       {/* Footer */}

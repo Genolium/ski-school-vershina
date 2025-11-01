@@ -18,15 +18,27 @@ certbot certonly --standalone -d www.ski-school-vershina.ru -d ski-school-vershi
 
 ```env
 # Backend
-JWT_SECRET=<сгенерируйте надежный секретный ключ>
-ADMIN_PASSWORD=<создайте надежный пароль администратора>
+JWT_SECRET=<сгенерируйте надежный секретный ключ минимум 32 символа>
+ADMIN_PASSWORD=<создайте надежный пароль администратора минимум 8 символов>
 CORS_ORIGINS=https://www.ski-school-vershina.ru,https://ski-school-vershina.ru
 ENVIRONMENT=production
 PORT=8080
-DB_PATH=/app/data/data.db
+
+# База данных (PostgreSQL рекомендуется для production)
+DB_TYPE=postgres
+DB_HOST=postgres
+DB_PORT=5432
+DB_NAME=ski_school
+DB_USER=ski_school
+DB_PASSWORD=<надежный пароль для PostgreSQL>
+
+# Telegram уведомления (опционально)
+TELEGRAM_BOT_TOKEN=<токен бота от @BotFather>
+TELEGRAM_CHAT_ID=<ID чата для уведомлений>
 
 # Frontend
 VITE_API_URL=/api
+VITE_YANDEX_METRIKA_ID=<ID счетчика Яндекс.Метрики>
 ```
 
 ### 3. Генерация секретных ключей
@@ -114,9 +126,40 @@ https://www.ski-school-vershina.ru/admin
 
 ## Бэкапы
 
-Настройте автоматическое резервное копирование базы данных:
+### PostgreSQL
+
+Настройте автоматическое резервное копирование базы данных PostgreSQL:
+
 ```bash
-# Пример cron задачи для ежедневного бэкапа
-0 2 * * * docker exec ski-school-backend sqlite3 /app/data/data.db ".backup /backups/backup-$(date +\%Y\%m\%d).db"
+# Использование shell скрипта
+0 2 * * * /path/to/backend/scripts/backup.sh
+
+# Или использование Go скрипта
+0 2 * * * cd /path/to/backend && go run scripts/backup.go
 ```
+
+Скрипт автоматически:
+- Создает бэкап с timestamp в имени файла
+- Сжимает бэкап с помощью gzip
+- Удаляет старые бэкапы (старше 7 дней)
+
+### Восстановление из бэкапа
+
+```bash
+backend/scripts/restore.sh /path/to/backup.sql.gz
+```
+
+### Настройка Telegram бота
+
+1. Создайте бота через @BotFather в Telegram
+2. Получите токен бота
+3. Найдите ID чата (можно использовать @userinfobot или создать группу и добавить бота)
+4. Добавьте переменные окружения `TELEGRAM_BOT_TOKEN` и `TELEGRAM_CHAT_ID`
+
+### Настройка Яндекс.Метрики
+
+1. Создайте счетчик в Яндекс.Метрике
+2. Получите ID счетчика
+3. Добавьте переменную окружения `VITE_YANDEX_METRIKA_ID`
+4. Настройте цель "Отправка заявки" с идентификатором `submit_application`
 

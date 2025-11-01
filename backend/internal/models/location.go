@@ -1,8 +1,8 @@
 package models
 
 import (
-	"time"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Location struct {
@@ -20,4 +20,3 @@ type Location struct {
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 }
-

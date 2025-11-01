@@ -28,4 +28,3 @@ func CreateDefaultAdmin(cfg *config.Config) error {
 
 	return database.DB.Create(&admin).Error
 }
-

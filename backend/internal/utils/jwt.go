@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
-	"time"
 	"github.com/golang-jwt/jwt/v5"
+	"time"
 )
 
 var jwtSecret = []byte("your-secret-key-change-in-production")
@@ -14,9 +16,13 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+const (
+	AccessTokenDuration  = 30 * time.Minute
+	RefreshTokenDuration = 7 * 24 * time.Hour // 7 дней
+)
+
 func GenerateToken(username, role string) (string, error) {
-	// Сокращенное время жизни токена до 30 минут для большей безопасности
-	expirationTime := time.Now().Add(30 * time.Minute)
+	expirationTime := time.Now().Add(AccessTokenDuration)
 	claims := &Claims{
 		Username: username,
 		Role:     role,
@@ -28,6 +34,14 @@ func GenerateToken(username, role string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtSecret)
+}
+
+func GenerateRefreshToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
 }
 
 func ValidateToken(tokenString string) (*Claims, error) {
@@ -54,5 +68,3 @@ func ValidateToken(tokenString string) (*Claims, error) {
 func SetJWTSecret(secret string) {
 	jwtSecret = []byte(secret)
 }
-
-

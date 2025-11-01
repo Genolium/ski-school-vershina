@@ -1,8 +1,8 @@
 package models
 
 import (
-	"time"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Statistic struct {
@@ -16,4 +16,3 @@ type Statistic struct {
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
-

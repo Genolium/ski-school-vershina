@@ -1,12 +1,20 @@
 package handlers
 
 import (
+	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
+	"ski-school-backend/internal/config"
 	"ski-school-backend/internal/database"
 	"ski-school-backend/internal/models"
-	"github.com/gin-gonic/gin"
+	"ski-school-backend/internal/services"
+	"strconv"
 )
+
+var cfg *config.Config
+
+func SetConfig(config *config.Config) {
+	cfg = config
+}
 
 func GetApplications(c *gin.Context) {
 	var applications []models.Application
@@ -63,6 +71,8 @@ func UpdateApplication(c *gin.Context) {
 		return
 	}
 
+	oldStatus := string(application.Status)
+
 	if req.Status != "" {
 		if !ValidateStringLength(req.Status, 1, 50) {
 			SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid status length")
@@ -94,6 +104,11 @@ func UpdateApplication(c *gin.Context) {
 		return
 	}
 
+	// Отправка уведомления об изменении статуса в Telegram
+	if req.Status != "" && oldStatus != string(application.Status) && cfg != nil {
+		go services.SendTelegramStatusUpdate(cfg, &application, oldStatus)
+	}
+
 	LogAdminAction(c, "UPDATE", "application", application.ID)
 	c.JSON(http.StatusOK, application)
 }
@@ -113,4 +128,3 @@ func DeleteApplication(c *gin.Context) {
 	LogAdminAction(c, "DELETE", "application", uint(id))
 	c.JSON(http.StatusOK, gin.H{"message": "Application deleted"})
 }
-

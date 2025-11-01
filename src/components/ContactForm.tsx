@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
 import { createApplication } from "@/lib/api";
+import { reachGoal } from "@/lib/metrika";
+import { logError } from "@/lib/errorHandler";
 
 const ContactForm = () => {
   const { toast } = useToast();
@@ -80,15 +82,29 @@ const ContactForm = () => {
     
     try {
       await createApplication(formData);
+      
+      // Отправка цели в Яндекс.Метрику
+      const metrikaId = import.meta.env.VITE_YANDEX_METRIKA_ID || '105075135';
+      if (metrikaId && window.ym) {
+        reachGoal(metrikaId, 'submit_application');
+      }
+      
       toast({
         title: "Заявка отправлена!",
         description: "Мы свяжемся с вами в ближайшее время.",
       });
       setFormData({ name: "", phone: "", age: "" });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Не удалось отправить заявку. Попробуйте позже.";
+      
+      // Логирование ошибки
+      if (import.meta.env.DEV) {
+        console.error('Failed to create application:', error);
+      }
+      
       toast({
         title: "Ошибка",
-        description: error?.message || "Не удалось отправить заявку. Попробуйте позже.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

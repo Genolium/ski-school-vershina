@@ -29,6 +29,9 @@ COPY --from=builder /app/server .
 # Копирование админ-панели
 COPY backend/admin ./admin
 
+# Копирование favicon
+COPY public/favicon ./public/favicon
+
 # Создание директории для данных SQLite
 RUN mkdir -p /app/data
 

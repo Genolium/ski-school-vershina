@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"net/http"
-	"strings"
-	"ski-school-backend/internal/utils"
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"ski-school-backend/internal/utils"
+	"strings"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
@@ -35,4 +35,3 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
-

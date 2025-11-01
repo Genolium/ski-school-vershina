@@ -1,8 +1,8 @@
 package models
 
 import (
-	"time"
 	"gorm.io/gorm"
+	"time"
 )
 
 type ApplicationStatus string
@@ -25,4 +25,3 @@ type Application struct {
 	UpdatedAt time.Time         `json:"updated_at"`
 	DeletedAt gorm.DeletedAt    `gorm:"index" json:"-"`
 }
-

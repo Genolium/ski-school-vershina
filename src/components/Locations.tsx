@@ -6,6 +6,7 @@ import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
 import Map2GIS from "./YandexMap";
 import { getLocations, type Location } from "@/lib/api";
+import { logError } from "@/lib/errorHandler";
 
 function iconFor(type?: string) {
   switch (type) {
@@ -24,41 +25,52 @@ const Locations = () => {
   const [items, setItems] = useState<Location[]>([]);
 
   useEffect(() => {
-    getLocations().then(setItems).catch(() => setItems([]));
+    getLocations()
+      .then(setItems)
+      .catch((error) => {
+        logError(error, 'Locations component');
+        setItems([]);
+      });
   }, []);
 
-  const locations = items.length
-    ? items
-    : [
-        {
-          id: 0,
-          title: "Зал",
-          address: "ул. Брянцева 24",
-          description: "Специализированный зал для ОФП, начальной подготовки и отработки техники",
-          features: JSON.stringify(["Искусственный склон", "Современное оборудование", "Раздевалки"]),
-          icon_type: "MapPin",
-          order: 0,
-        } as any,
-        {
-          id: 1,
-          title: "Велосипеды/Ролики",
-          address: "п. Токсово «Северный склон»",
-          description:
-            "Летние тренировки на велосипедах и роликах для развития баланса и выносливости",
-          features: JSON.stringify(["Безопасные трассы", "Профессиональная экипировка", "Групповые занятия"]),
-          icon_type: "Bike",
-          order: 1,
-        } as any,
-        {
-          id: 2,
-          title: "Горные лыжи",
-          address: "ГК «Снежный»",
-          description: "Основные тренировки на горнолыжных склонах с ратраченными трассами",
-          features: JSON.stringify(["5 трасс разного уровня", "Подъемники", "Прокат оборудования"]),
-          icon_type: "Mountain",
-          order: 2,
-        } as any,
-      ];
+  const fallbackLocations: Location[] = [
+    {
+      id: 0,
+      title: "Зал",
+      address: "ул. Брянцева 24",
+      description: "Специализированный зал для ОФП, начальной подготовки и отработки техники",
+      features: JSON.stringify(["Искусственный склон", "Современное оборудование", "Раздевалки"]),
+      icon_type: "MapPin",
+      order: 0,
+      latitude: 0,
+      longitude: 0,
+    },
+    {
+      id: 1,
+      title: "Велосипеды/Ролики",
+      address: "п. Токсово «Северный склон»",
+      description:
+        "Летние тренировки на велосипедах и роликах для развития баланса и выносливости",
+      features: JSON.stringify(["Безопасные трассы", "Профессиональная экипировка", "Групповые занятия"]),
+      icon_type: "Bike",
+      order: 1,
+      latitude: 0,
+      longitude: 0,
+    },
+    {
+      id: 2,
+      title: "Горные лыжи",
+      address: "ГК «Снежный»",
+      description: "Основные тренировки на горнолыжных склонах с ратраченными трассами",
+      features: JSON.stringify(["5 трасс разного уровня", "Подъемники", "Прокат оборудования"]),
+      icon_type: "Mountain",
+      order: 2,
+      latitude: 0,
+      longitude: 0,
+    },
+  ];
+
+  const locations = items.length ? items : fallbackLocations;
 
   const parseFeatures = (f?: string) => {
     if (!f) return [] as string[];

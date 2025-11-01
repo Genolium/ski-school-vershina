@@ -1,8 +1,8 @@
 package models
 
 import (
-	"time"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Camp struct {
@@ -16,10 +16,9 @@ type Camp struct {
 	GroupDesc     string         `gorm:"type:text" json:"group_desc"`
 	TrainingDesc  string         `gorm:"type:text" json:"training_desc"`
 	IncludedItems string         `gorm:"type:text" json:"included_items"` // JSON array as string
-	Stats         string         `gorm:"type:text" json:"stats"`           // JSON object as string
+	Stats         string         `gorm:"type:text" json:"stats"`          // JSON object as string
 	IsActive      bool           `gorm:"default:true" json:"is_active"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`
 }
-

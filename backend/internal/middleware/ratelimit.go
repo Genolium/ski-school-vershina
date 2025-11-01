@@ -1,12 +1,12 @@
 package middleware
 
 import (
+	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
-	"github.com/gin-gonic/gin"
 )
 
 // Реализация ограничителя скорости запросов
@@ -28,10 +28,10 @@ var limiter *rateLimiter
 func init() {
 	limiter = &rateLimiter{
 		visitors: make(map[string]*visitor),
-		rate:     5,              // 5 requests
+		rate:     5,                // 5 requests
 		window:   15 * time.Minute, // per 15 minutes
 	}
-	
+
 	// Очистка старых посетителей каждые 30 минут
 	go func() {
 		for {
@@ -44,7 +44,7 @@ func init() {
 func (rl *rateLimiter) cleanup() {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	
+
 	now := time.Now()
 	for k, v := range rl.visitors {
 		if now.Sub(v.lastSeen) > rl.window {
@@ -65,22 +65,22 @@ func (rl *rateLimiter) allow(ip string) bool {
 		return true
 	}
 	rl.mu.Unlock()
-	
+
 	v.mu.Lock()
 	defer v.mu.Unlock()
-	
+
 	// Сброс при истечении окна
 	if time.Since(v.lastSeen) > rl.window {
 		v.count = 1
 		v.lastSeen = time.Now()
 		return true
 	}
-	
+
 	// Проверка лимита скорости
 	if v.count >= rl.rate {
 		return false
 	}
-	
+
 	v.count++
 	v.lastSeen = time.Now()
 	return true
@@ -97,7 +97,7 @@ func getClientIP(c *gin.Context) string {
 		}
 		return strings.TrimSpace(realIP)
 	}
-	
+
 	// Пробуем X-Forwarded-For (может содержать несколько IP)
 	if forwardedFor := c.GetHeader("X-Forwarded-For"); forwardedFor != "" {
 		// X-Forwarded-For: client, proxy1, proxy2
@@ -107,7 +107,7 @@ func getClientIP(c *gin.Context) string {
 			return strings.TrimSpace(ips[0])
 		}
 	}
-	
+
 	// Резервный вариант - ClientIP() от Gin, использует RemoteAddr
 	return c.ClientIP()
 }
@@ -116,9 +116,9 @@ func getClientIP(c *gin.Context) string {
 func RateLimitMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := getClientIP(c)
-		
+
 		if !limiter.allow(ip) {
-			log.Printf("Rate limit exceeded for IP: %s (X-Real-IP: %s, X-Forwarded-For: %s)", 
+			log.Printf("Rate limit exceeded for IP: %s (X-Real-IP: %s, X-Forwarded-For: %s)",
 				ip, c.GetHeader("X-Real-IP"), c.GetHeader("X-Forwarded-For"))
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"error": "Too many requests. Please try again later.",
@@ -126,7 +126,7 @@ func RateLimitMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		c.Next()
 	}
 }
@@ -136,13 +136,13 @@ func RateLimitMiddleware() gin.HandlerFunc {
 func AdminRateLimitMiddleware() gin.HandlerFunc {
 	adminLimiter := &rateLimiter{
 		visitors: make(map[string]*visitor),
-		rate:     200,            // 200 requests
+		rate:     200,             // 200 requests
 		window:   1 * time.Minute, // per minute (much more lenient)
 	}
-	
+
 	return func(c *gin.Context) {
 		ip := getClientIP(c)
-		
+
 		adminLimiter.mu.Lock()
 		v, exists := adminLimiter.visitors[ip]
 		if !exists {
@@ -155,10 +155,10 @@ func AdminRateLimitMiddleware() gin.HandlerFunc {
 			return
 		}
 		adminLimiter.mu.Unlock()
-		
+
 		v.mu.Lock()
 		defer v.mu.Unlock()
-		
+
 		// Сброс при истечении окна
 		if time.Since(v.lastSeen) > adminLimiter.window {
 			v.count = 1
@@ -166,10 +166,10 @@ func AdminRateLimitMiddleware() gin.HandlerFunc {
 			c.Next()
 			return
 		}
-		
+
 		// Проверка лимита скорости
 		if v.count >= adminLimiter.rate {
-			log.Printf("Admin rate limit exceeded for IP: %s (X-Real-IP: %s, X-Forwarded-For: %s)", 
+			log.Printf("Admin rate limit exceeded for IP: %s (X-Real-IP: %s, X-Forwarded-For: %s)",
 				ip, c.GetHeader("X-Real-IP"), c.GetHeader("X-Forwarded-For"))
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"error": "Too many requests. Please slow down.",
@@ -177,7 +177,7 @@ func AdminRateLimitMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		v.count++
 		v.lastSeen = time.Now()
 		c.Next()
@@ -188,13 +188,13 @@ func AdminRateLimitMiddleware() gin.HandlerFunc {
 func StrictRateLimitMiddleware() gin.HandlerFunc {
 	strictLimiter := &rateLimiter{
 		visitors: make(map[string]*visitor),
-		rate:     5,              // 5 attempts
+		rate:     5,                // 5 attempts
 		window:   15 * time.Minute, // per 15 minutes
 	}
-	
+
 	return func(c *gin.Context) {
 		ip := getClientIP(c)
-		
+
 		strictLimiter.mu.Lock()
 		v, exists := strictLimiter.visitors[ip]
 		if !exists {
@@ -207,10 +207,10 @@ func StrictRateLimitMiddleware() gin.HandlerFunc {
 			return
 		}
 		strictLimiter.mu.Unlock()
-		
+
 		v.mu.Lock()
 		defer v.mu.Unlock()
-		
+
 		// Сброс при истечении окна
 		if time.Since(v.lastSeen) > strictLimiter.window {
 			v.count = 1
@@ -218,7 +218,7 @@ func StrictRateLimitMiddleware() gin.HandlerFunc {
 			c.Next()
 			return
 		}
-		
+
 		// Проверка лимита скорости
 		if v.count >= strictLimiter.rate {
 			log.Printf("Login rate limit exceeded for IP: %s", ip)
@@ -228,10 +228,9 @@ func StrictRateLimitMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		v.count++
 		v.lastSeen = time.Now()
 		c.Next()
 	}
 }
-

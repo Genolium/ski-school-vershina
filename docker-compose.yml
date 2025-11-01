@@ -1,6 +1,26 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ski-school-postgres
+    environment:
+      - POSTGRES_DB=${DB_NAME:-ski_school}
+      - POSTGRES_USER=${DB_USER:-ski_school}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-changeme}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    restart: unless-stopped
+    networks:
+      - ski-school-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-ski_school}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: .
@@ -12,11 +32,22 @@ services:
       - PORT=8080
       - DB_PATH=/app/data/data.db
       - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - CORS_ORIGINS=http://localhost:3000,http://localhost:5173,https://www.ski-school-vershina.ru,https://ski-school-vershina.ru
-      - ENVIRONMENT=production
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DB_TYPE=${DB_TYPE:-postgres}
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-ski_school}
+      - DB_USER=${DB_USER:-ski_school}
+      - DB_PASSWORD=${DB_PASSWORD:-changeme}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
     volumes:
       - backend-data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - ski-school-network
@@ -32,6 +63,7 @@ services:
       dockerfile: Dockerfile
       args:
         - VITE_API_URL=/api
+        - VITE_YANDEX_METRIKA_ID=${VITE_YANDEX_METRIKA_ID:-}
     container_name: ski-school-frontend
     ports:
       - "3000:80"
@@ -44,6 +76,8 @@ services:
 
 volumes:
   backend-data:
+    driver: local
+  postgres-data:
     driver: local
 
 networks:

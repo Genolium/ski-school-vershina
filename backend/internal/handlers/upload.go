@@ -2,15 +2,16 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
-	"time"
 	"ski-school-backend/internal/database"
 	"ski-school-backend/internal/models"
-	"github.com/gin-gonic/gin"
+	"ski-school-backend/internal/services"
+	"strconv"
+	"time"
 )
 
 // UploadFile обрабатывает загрузку файлов
@@ -82,7 +83,7 @@ func UploadFile(c *gin.Context) {
 // CRUD для тренеров
 func AdminGetCoaches(c *gin.Context) {
 	var coaches []models.Coach
-	if err := database.DB.Order("`order` ASC").Find(&coaches).Error; err != nil {
+	if err := database.DB.Order(database.GetOrderClause() + " ASC").Find(&coaches).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to fetch coaches")
 		return
 	}
@@ -95,17 +96,18 @@ func AdminCreateCoach(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
-	
+
 	if !ValidateStringLength(coach.Name, 1, 200) || !ValidateStringLength(coach.Position, 1, 200) {
 		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
 		return
 	}
-	
+
 	if err := database.DB.Create(&coach).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to create coach")
 		return
 	}
-	
+
+	services.InvalidateCache("coaches")
 	LogAdminAction(c, "CREATE", "coach", coach.ID)
 	c.JSON(http.StatusCreated, coach)
 }
@@ -121,17 +123,18 @@ func AdminUpdateCoach(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
-	
+
 	if !ValidateStringLength(coach.Name, 1, 200) || !ValidateStringLength(coach.Position, 1, 200) {
 		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
 		return
 	}
-	
+
 	if err := database.DB.Save(&coach).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to update coach")
 		return
 	}
-	
+
+	services.InvalidateCache("coaches")
 	LogAdminAction(c, "UPDATE", "coach", coach.ID)
 	c.JSON(http.StatusOK, coach)
 }
@@ -142,7 +145,7 @@ func AdminDeleteCoach(c *gin.Context) {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to delete coach")
 		return
 	}
+	services.InvalidateCache("coaches")
 	LogAdminAction(c, "DELETE", "coach", uint(id))
 	c.JSON(http.StatusOK, gin.H{"message": "Coach deleted"})
 }
-
