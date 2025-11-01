@@ -14,6 +14,40 @@ import (
 	"time"
 )
 
+// ServeUploadedFile обрабатывает запросы на загруженные файлы с поддержкой старого и нового путей
+func ServeUploadedFile(c *gin.Context) {
+	filepathParam := c.Param("filepath")
+	if filepathParam == "" {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	// Убираем ведущий слеш и получаем имя файла
+	if len(filepathParam) > 0 && filepathParam[0] == '/' {
+		filepathParam = filepathParam[1:]
+	}
+
+	// Безопасность: только базовое имя файла (защита от path traversal)
+	filename := filepath.Base(filepathParam)
+
+	// Сначала пробуем новый путь (в volume)
+	newPath := filepath.Join("/app/data/uploads", filename)
+	if stat, err := os.Stat(newPath); err == nil && !stat.IsDir() {
+		c.File(newPath)
+		return
+	}
+
+	// Если не найден, пробуем старый путь (для обратной совместимости)
+	oldPath := filepath.Join("./public/uploads", filename)
+	if stat, err := os.Stat(oldPath); err == nil && !stat.IsDir() {
+		c.File(oldPath)
+		return
+	}
+
+	// Если файл не найден ни в одном месте
+	c.Status(http.StatusNotFound)
+}
+
 // UploadFile обрабатывает загрузку файлов
 func UploadFile(c *gin.Context) {
 	file, err := c.FormFile("file")
@@ -54,7 +88,7 @@ func UploadFile(c *gin.Context) {
 	// Генерация уникального имени файла
 	timestamp := time.Now().Unix()
 	filename := fmt.Sprintf("%d_%s", timestamp, file.Filename)
-	filepath := filepath.Join(uploadDir, filename)
+	filePath := filepath.Join(uploadDir, filename)
 
 	// Сохранение файла
 	src, err := file.Open()
@@ -64,7 +98,7 @@ func UploadFile(c *gin.Context) {
 	}
 	defer src.Close()
 
-	dst, err := os.Create(filepath)
+	dst, err := os.Create(filePath)
 	if err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to save file")
 		return
