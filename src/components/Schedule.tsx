@@ -110,7 +110,7 @@ const Schedule = () => {
 
                     <Button 
                       variant="cta" 
-                      className="w-full mt-4 md:mt-6 group text-sm md:text-base h-10 md:h-11" 
+                      className="w-full mt-4 md:mt-6 group text-sm md:text-base h-11 md:h-12 touch-manipulation" 
                       onClick={scrollToForm}
                     >
                       Записаться в группу

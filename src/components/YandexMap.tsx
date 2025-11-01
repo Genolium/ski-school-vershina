@@ -4,7 +4,7 @@
  */
 const Map2GIS = () => {
   return (
-    <div className="w-full h-64 md:h-96 rounded-lg overflow-hidden bg-muted">
+    <div className="w-full h-64 sm:h-80 md:h-96 rounded-lg overflow-hidden bg-muted touch-none">
       <iframe
         id="map_831219488"
         frameBorder="0"
@@ -16,6 +16,7 @@ const Map2GIS = () => {
         style={{ border: "none", borderRadius: "0.5rem" }}
         title="Карта локаций школы Вершина"
         loading="lazy"
+        aria-label="Интерактивная карта с локациями школы Вершина"
       />
     </div>
   );

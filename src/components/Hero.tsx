@@ -49,14 +49,14 @@ const Hero = () => {
               variant="hero" 
               size="lg"
               onClick={scrollToForm}
-              className="group w-full text-sm sm:text-base h-12 sm:h-14"
+              className="group w-full text-sm sm:text-base h-12 sm:h-14 touch-manipulation"
             >
               Записаться на пробное занятие
               <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
             
             <a href="tel:+79817428685" className="w-full" aria-label="Позвонить тренеру по телефону +7 (981) 742-86-85">
-              <Button variant="outline" size="lg" className="bg-ski-white/10 border-ski-white text-ski-white hover:bg-ski-white hover:text-ski-black backdrop-blur-sm w-full text-sm sm:text-base h-12 sm:h-14">
+              <Button variant="outline" size="lg" className="bg-ski-white/10 border-ski-white text-ski-white hover:bg-ski-white hover:text-ski-black backdrop-blur-sm w-full text-sm sm:text-base h-12 sm:h-14 touch-manipulation">
                 Позвонить тренеру
               </Button>
             </a>

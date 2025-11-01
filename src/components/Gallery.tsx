@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getMedia, type Media } from "@/lib/api";
 import { resolveAssetUrl } from "@/lib/assets";
 import { logError } from "@/lib/errorHandler";
 import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -12,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { X } from "lucide-react";
 
 const Gallery = () => {
   const [media, setMedia] = useState<Media[]>([]);
@@ -45,6 +45,30 @@ const Gallery = () => {
     if (selectedType !== "all" && m.media_type !== selectedType) return false;
     return true;
   });
+
+  // Закрытие модального окна по ESC
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selectedMedia) {
+        setSelectedMedia(null);
+      }
+    };
+
+    if (selectedMedia) {
+      document.addEventListener("keydown", handleEscape);
+      // Предотвращаем скролл body при открытой модалке
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
+    };
+  }, [selectedMedia]);
+
+  const handleCloseModal = useCallback(() => {
+    setSelectedMedia(null);
+  }, []);
 
   if (loading) {
     return (
@@ -133,18 +157,31 @@ const Gallery = () => {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-hero">
-                      <div className="text-ski-white text-center">
-                        <div className="text-4xl mb-2">▶</div>
-                        <div className="text-sm">{item.title}</div>
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-hero relative">
+                      {/* Превью видео, если есть thumbnail */}
+                      {item.file_path && (
+                        <video
+                          src={resolveAssetUrl(item.file_path)}
+                          className="w-full h-full object-cover opacity-50"
+                          muted
+                          playsInline
+                          preload="metadata"
+                        />
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-ski-white text-center z-10">
+                          <div className="text-3xl md:text-4xl mb-2 drop-shadow-lg">▶</div>
+                          <div className="text-xs md:text-sm font-medium px-2">{item.title}</div>
+                        </div>
                       </div>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  {/* Overlay с информацией - видим на hover и на touch devices */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 active:bg-black/40 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100">
                     <div className="text-ski-white text-center px-4">
                       <h3 className="font-bold text-sm md:text-base">{item.title}</h3>
                       {item.description && (
-                        <p className="text-xs text-ski-white/80 mt-1">{item.description}</p>
+                        <p className="text-xs text-ski-white/80 mt-1 line-clamp-2">{item.description}</p>
                       )}
                     </div>
                   </div>
@@ -157,37 +194,56 @@ const Gallery = () => {
 
       {selectedMedia && (
         <div
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedMedia(null)}
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6"
+          onClick={handleCloseModal}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
         >
-          <div className="max-w-6xl max-h-full" onClick={(e) => e.stopPropagation()}>
-            {selectedMedia.media_type === "photo" ? (
-              <img
-                src={resolveAssetUrl(selectedMedia.file_path)}
-                alt={selectedMedia.title}
-                className="max-w-full max-h-[90vh] object-contain rounded"
-              />
-            ) : (
-              <video
-                src={resolveAssetUrl(selectedMedia.file_path)}
-                controls
-                className="max-w-full max-h-[90vh] rounded"
-                autoPlay
-              />
-            )}
-            <div className="mt-4 text-center text-ski-white">
-              <h3 className="text-xl font-bold">{selectedMedia.title}</h3>
-              {selectedMedia.description && (
-                <p className="text-ski-white/80 mt-2">{selectedMedia.description}</p>
+          <div 
+            className="max-w-6xl w-full max-h-[95vh] md:max-h-[90vh] flex flex-col items-center" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Кнопка закрытия */}
+            <button
+              onClick={handleCloseModal}
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 p-2 rounded-full bg-black/50 hover:bg-black/70 text-ski-white transition-colors touch-manipulation"
+              aria-label="Закрыть"
+            >
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+
+            {/* Контент медиа */}
+            <div className="flex-1 flex items-center justify-center w-full mb-2 sm:mb-4">
+              {selectedMedia.media_type === "photo" ? (
+                <img
+                  src={resolveAssetUrl(selectedMedia.file_path)}
+                  alt={selectedMedia.title}
+                  className="max-w-full max-h-[85vh] sm:max-h-[80vh] md:max-h-[75vh] object-contain rounded-lg shadow-2xl"
+                  loading="eager"
+                />
+              ) : (
+                <video
+                  src={resolveAssetUrl(selectedMedia.file_path)}
+                  controls
+                  className="max-w-full max-h-[85vh] sm:max-h-[80vh] md:max-h-[75vh] rounded-lg shadow-2xl w-full"
+                  autoPlay
+                  playsInline
+                />
               )}
             </div>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => setSelectedMedia(null)}
-            >
-              Закрыть
-            </Button>
+
+            {/* Информация о медиа */}
+            <div className="text-center text-ski-white px-4 pb-4 sm:pb-6">
+              <h3 id="modal-title" className="text-lg sm:text-xl md:text-2xl font-bold mb-2">
+                {selectedMedia.title}
+              </h3>
+              {selectedMedia.description && (
+                <p className="text-sm sm:text-base text-ski-white/80 max-w-2xl mx-auto">
+                  {selectedMedia.description}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}

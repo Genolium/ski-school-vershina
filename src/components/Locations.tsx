@@ -138,16 +138,16 @@ const Locations = () => {
               </ul>
               
               {(location.route_url || (location.latitude && location.longitude && location.latitude !== 0 && location.longitude !== 0)) && (
-                <a 
-                  href={getRouteUrl(location)} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-block"
-                >
-                  <Button variant="outline" size="sm" className="text-xs md:text-sm border-primary/50 text-primary bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary">
-                    Как добраться
-                  </Button>
-                </a>
+                  <a 
+                    href={getRouteUrl(location)} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-block touch-manipulation"
+                  >
+                    <Button variant="outline" size="sm" className="text-xs md:text-sm border-primary/50 text-primary bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary touch-manipulation">
+                      Как добраться
+                    </Button>
+                  </a>
               )}
             </div>
             </ScrollReveal>

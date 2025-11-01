@@ -70,19 +70,21 @@ const Trainers = () => {
           opts={{
             align: "start",
             loop: true,
+            dragFree: true,
           }}
           className="w-full"
         >
           <CarouselContent className="-ml-2 md:-ml-4 items-stretch">
             {coaches.map((coach) => (
-              <CarouselItem key={coach.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
-                <div className="bg-card border-2 border-border rounded-xl p-5 md:p-6 hover:border-primary hover:shadow-ski transition-all duration-300 h-full flex flex-col">
+              <CarouselItem key={coach.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
+                <div className="bg-card border-2 border-border rounded-xl p-5 md:p-6 hover:border-primary hover:shadow-ski transition-all duration-300 h-full flex flex-col touch-manipulation">
                   {coach.photo && (
                     <div className="mb-4 rounded-lg overflow-hidden aspect-square mx-auto flex-shrink-0 w-full">
                       <img
                         src={resolveAssetUrl(coach.photo)}
                         alt={coach.name}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     </div>
                   )}
@@ -101,8 +103,8 @@ const Trainers = () => {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="hidden md:flex -left-4 lg:-left-12 h-10 w-10 bg-background border-2 shadow-lg hover:scale-110 transition-transform" />
-          <CarouselNext className="hidden md:flex -right-4 lg:-right-12 h-10 w-10 bg-background border-2 shadow-lg hover:scale-110 transition-transform" />
+          <CarouselPrevious className="hidden md:flex -left-4 lg:-left-12 h-10 w-10 bg-background border-2 shadow-lg hover:scale-110 transition-transform touch-manipulation" />
+          <CarouselNext className="hidden md:flex -right-4 lg:-right-12 h-10 w-10 bg-background border-2 shadow-lg hover:scale-110 transition-transform touch-manipulation" />
           
           {/* Индикаторы точек */}
           {count > 1 && (
@@ -112,9 +114,9 @@ const Trainers = () => {
                   key={index}
                   onClick={() => api?.scrollTo(index)}
                   className={cn(
-                    "h-2 w-2 rounded-full transition-all duration-300",
+                    "h-2.5 w-2.5 md:h-2 md:w-2 rounded-full transition-all duration-300 touch-manipulation",
                     current === index + 1
-                      ? "bg-primary w-8"
+                      ? "bg-primary w-8 md:w-10"
                       : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
                   )}
                   aria-label={`Перейти к слайду ${index + 1}`}

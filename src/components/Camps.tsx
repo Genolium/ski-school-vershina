@@ -118,7 +118,7 @@ const Camps = () => {
                   <p className="text-sm md:text-lg mb-3 md:mb-4">
                     Места ограничены! Успейте записаться в группу
                   </p>
-                  <Button variant="hero" size="lg" onClick={scrollToForm} className="text-sm md:text-base h-11 md:h-14">
+                  <Button variant="hero" size="lg" onClick={scrollToForm} className="text-sm md:text-base h-12 md:h-14 touch-manipulation">
                     Оставить заявку
                   </Button>
                 </div>

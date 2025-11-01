@@ -190,11 +190,11 @@ const ContactForm = () => {
                 </div>
 
                 <div className="mt-auto pt-5 md:pt-6">
-                  <Button type="submit" variant="hero" size="lg" className="w-full text-sm md:text-base h-11 md:h-12" disabled={submitting}>
+                  <Button type="submit" variant="hero" size="lg" className="w-full text-sm md:text-base h-12 md:h-14 touch-manipulation" disabled={submitting}>
                     {submitting ? "Отправка..." : "Записаться на пробное занятие"}
                   </Button>
 
-                  <p className="text-[10px] md:text-xs text-muted-foreground text-center leading-tight mt-3">
+                  <p className="text-[10px] md:text-xs text-muted-foreground text-center leading-tight mt-3 px-2">
                     Нажимая кнопку, вы соглашаетесь с политикой обработки персональных данных
                   </p>
                 </div>
