@@ -315,7 +315,14 @@ const AdminMedia = () => {
         </TableBody>
       </Table>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog 
+        key={`dialog-${isDialogOpen ? 'open' : 'closed'}-${editingItem?.id || 'new'}`}
+        open={isDialogOpen} 
+        onOpenChange={(open) => {
+          console.log("AdminMedia Dialog onOpenChange:", open);
+          setIsDialogOpen(open);
+        }}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>

@@ -104,7 +104,14 @@ const AdminLocations = () => {
 
   return (
     <>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog 
+        key={`dialog-${isDialogOpen ? 'open' : 'closed'}-${editingItem?.id || 'new'}`}
+        open={isDialogOpen} 
+        onOpenChange={(open) => {
+          console.log("AdminLocations Dialog onOpenChange:", open);
+          setIsDialogOpen(open);
+        }}
+      >
         <LocationForm
           editingItem={editingItem}
           iconType={iconType}

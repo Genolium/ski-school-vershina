@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { type ScheduleGroup } from "@/lib/api";
+import { useEffect } from "react";
 
 interface ScheduleDialogProps {
   open: boolean;
@@ -13,9 +14,16 @@ interface ScheduleDialogProps {
 }
 
 export const ScheduleDialog = ({ open, onOpenChange, editingItem, onSubmit }: ScheduleDialogProps) => {
+  useEffect(() => {
+    console.log("ScheduleDialog - open prop changed:", open);
+  }, [open]);
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
+    <Dialog open={open} onOpenChange={(open) => {
+      console.log("ScheduleDialog internal onOpenChange:", open);
+      onOpenChange(open);
+    }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {editingItem ? "Редактировать группу" : "Добавить группу"}

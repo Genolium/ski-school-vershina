@@ -135,12 +135,17 @@ const AdminCamps = () => {
 
   return (
     <>
-      <Dialog open={isDialogOpen} onOpenChange={(open) => {
-        setIsDialogOpen(open);
-        if (!open) {
-          setEditingItem(null);
-        }
-      }}>
+      <Dialog 
+        key={`dialog-${isDialogOpen ? 'open' : 'closed'}-${editingItem?.id || 'new'}`}
+        open={isDialogOpen} 
+        onOpenChange={(open) => {
+          console.log("AdminCamps Dialog onOpenChange:", open);
+          setIsDialogOpen(open);
+          if (!open) {
+            setEditingItem(null);
+          }
+        }}
+      >
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>

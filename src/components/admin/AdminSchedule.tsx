@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
@@ -101,8 +101,10 @@ const AdminSchedule = () => {
 
   const handleAdd = () => {
     try {
+      console.log("handleAdd called, setting isDialogOpen to true");
       setEditingItem(null);
       setIsDialogOpen(true);
+      console.log("isDialogOpen should be true now");
     } catch (error) {
       console.error("Error in handleAdd:", error);
       toast.error("Ошибка при открытии формы");
@@ -111,13 +113,19 @@ const AdminSchedule = () => {
 
   const handleEdit = (item: ScheduleGroup) => {
     try {
+      console.log("handleEdit called, setting isDialogOpen to true", item);
       setEditingItem(item);
       setIsDialogOpen(true);
+      console.log("isDialogOpen should be true now");
     } catch (error) {
       console.error("Error in handleEdit:", error);
       toast.error("Ошибка при открытии формы редактирования");
     }
   };
+
+  useEffect(() => {
+    console.log("isDialogOpen changed:", isDialogOpen);
+  }, [isDialogOpen]);
 
   if (isLoading) {
     return <div className="text-center py-8">Загрузка...</div>;
@@ -126,8 +134,12 @@ const AdminSchedule = () => {
   return (
     <div className="space-y-4">
       <ScheduleDialog
+        key={`dialog-${isDialogOpen ? 'open' : 'closed'}-${editingItem?.id || 'new'}`}
         open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        onOpenChange={(open) => {
+          console.log("ScheduleDialog onOpenChange called with:", open);
+          setIsDialogOpen(open);
+        }}
         editingItem={editingItem}
         onSubmit={handleSubmit}
       />

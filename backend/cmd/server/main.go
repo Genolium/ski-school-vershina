@@ -143,14 +143,14 @@ func main() {
 		}
 	}
 
-	// Раздача статических файлов админ-панели
-	r.Static("/admin", "./admin")
-
 	// Раздача загруженных файлов
 	r.Static("/uploads", "./public/uploads")
 
 	// Раздача favicon
 	r.Static("/favicon", "./public/favicon")
+
+	// Примечание: React админка обслуживается через фронтенд (Vite), не через бэкенд
+	// Старый HTML файл backend/admin/index.html больше не используется
 
 	log.Printf("Server starting on port %s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {

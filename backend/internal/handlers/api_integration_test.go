@@ -1051,12 +1051,19 @@ func TestAdminMedia(t *testing.T) {
 	})
 
 	t.Run("UpdateMedia", func(t *testing.T) {
-		update := models.Media{
-			Title:     "Фото тренировки обновленное",
-			MediaType: models.MediaTypePhoto,
-			Category:  "training",
-			Order:     1,
-			IsActive:  true,
+		// Используем структуру с указателями для частичного обновления
+		title := "Фото тренировки обновленное"
+		mediaType := models.MediaTypePhoto
+		category := "training"
+		order := 1
+		isActive := true
+
+		update := map[string]interface{}{
+			"title":      title,
+			"media_type": mediaType,
+			"category":   category,
+			"order":      order,
+			"is_active":  isActive,
 		}
 		jsonData, _ := json.Marshal(update)
 

@@ -56,18 +56,6 @@
         .success { color: #28a745; margin: 10px 0; }
         .hidden { display: none !important; }
         
-        /* Стили модальных окон */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-overlay.hidden { display: none !important; }
-        .modal { background: white; padding: 30px; border-radius: 8px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-        .modal h3 { margin-bottom: 20px; color: #333; }
-        .modal form { display: flex; flex-direction: column; gap: 15px; }
-        .modal .form-group { display: flex; flex-direction: column; }
-        .modal label { margin-bottom: 5px; color: #333; font-weight: 500; }
-        .modal .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-        .modal .form-row { display: flex; gap: 10px; }
-        .modal .form-row .form-group { flex: 1; }
-        
         .actions-cell { display: flex; gap: 8px; }
     </style>
 </head>
@@ -249,271 +237,6 @@
         </div>
     </div>
 
-    <!-- Modal for Schedule -->
-    <div id="scheduleModal" class="modal-overlay hidden" style="display: none;">
-        <div class="modal">
-            <h3 id="scheduleModalTitle">Добавить группу</h3>
-            <form id="scheduleForm">
-                <input type="hidden" id="scheduleId">
-                <div class="form-group">
-                    <label>Группа</label>
-                    <input type="text" id="scheduleGroup" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Возраст</label>
-                        <input type="text" id="scheduleAgeRange" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Места</label>
-                        <input type="number" id="scheduleSpots" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Дни</label>
-                        <input type="text" id="scheduleDays" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Время</label>
-                        <input type="text" id="scheduleTime" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Локация</label>
-                    <input type="text" id="scheduleLocation" required>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="scheduleIsActive"> Активна
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label>Порядок</label>
-                    <input type="number" id="scheduleOrder" value="0">
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeScheduleModal()">Отмена</button>
-                    <button type="submit" class="btn-primary">Сохранить</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal for Location -->
-    <div id="locationModal" class="modal-overlay hidden" style="display: none;">
-        <div class="modal">
-            <h3 id="locationModalTitle">Добавить локацию</h3>
-            <form id="locationForm">
-                <input type="hidden" id="locationId">
-                <div class="form-group">
-                    <label>Название</label>
-                    <input type="text" id="locationTitle" required>
-                </div>
-                <div class="form-group">
-                    <label>Адрес</label>
-                    <input type="text" id="locationAddress" required>
-                </div>
-                <div class="form-group">
-                    <label>Описание</label>
-                    <textarea id="locationDescription"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Особенности (JSON массив, например: ["Особенность 1", "Особенность 2"])</label>
-                    <textarea id="locationFeatures" placeholder='["Особенность 1", "Особенность 2"]'></textarea>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Тип иконки</label>
-                        <select id="locationIconType">
-                            <option value="MapPin">MapPin</option>
-                            <option value="Bike">Bike</option>
-                            <option value="Mountain">Mountain</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Порядок</label>
-                        <input type="number" id="locationOrder" value="0">
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeLocationModal()">Отмена</button>
-                    <button type="submit" class="btn-primary">Сохранить</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal for Camp -->
-    <div id="campModal" class="modal-overlay hidden" style="display: none;">
-        <div class="modal">
-            <h3 id="campModalTitle">Добавить сборы</h3>
-            <form id="campForm">
-                <input type="hidden" id="campId">
-                <div class="form-group">
-                    <label>Название</label>
-                    <input type="text" id="campTitle" required>
-                </div>
-                <div class="form-group">
-                    <label>Локация</label>
-                    <input type="text" id="campLocation" required>
-                </div>
-                <div class="form-group">
-                    <label>Описание локации</label>
-                    <input type="text" id="campLocationDesc">
-                </div>
-                <div class="form-group">
-                    <label>Даты</label>
-                    <input type="text" id="campDates" required>
-                </div>
-                <div class="form-group">
-                    <label>Продолжительность</label>
-                    <input type="text" id="campDuration">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Размер группы</label>
-                        <input type="text" id="campGroupSize">
-                    </div>
-                    <div class="form-group">
-                        <label>Описание группы</label>
-                        <input type="text" id="campGroupDesc">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Описание тренировок</label>
-                    <textarea id="campTrainingDesc"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Включено (JSON массив)</label>
-                    <textarea id="campIncludedItems" placeholder='["Проживание", "Питание"]'></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Статистика (JSON объект)</label>
-                    <textarea id="campStats" placeholder='{"camps_count": "5", "participants": "80+"}'></textarea>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="campIsActive"> Активны
-                    </label>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeCampModal()">Отмена</button>
-                    <button type="submit" class="btn-primary">Сохранить</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal for Stat -->
-    <div id="statModal" class="modal-overlay hidden" style="display: none;">
-        <div class="modal">
-            <h3 id="statModalTitle">Добавить статистику</h3>
-            <form id="statForm">
-                <input type="hidden" id="statId">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Значение</label>
-                        <input type="text" id="statValue" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Суффикс</label>
-                        <input type="text" id="statSuffix" placeholder="+, %, лет">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Подпись</label>
-                    <input type="text" id="statLabel" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Тип иконки</label>
-                        <select id="statIconType">
-                            <option value="Trophy">Trophy</option>
-                            <option value="Users">Users</option>
-                            <option value="Award">Award</option>
-                            <option value="Target">Target</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Порядок</label>
-                        <input type="number" id="statOrder" value="0">
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeStatModal()">Отмена</button>
-                    <button type="submit" class="btn-primary">Сохранить</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal for Coach -->
-    <div id="coachModal" class="modal-overlay hidden" style="display: none;">
-        <div class="modal">
-            <h3 id="coachModalTitle">Добавить тренера</h3>
-            <form id="coachForm">
-                <input type="hidden" id="coachId">
-                <div class="form-group">
-                    <label>Имя</label>
-                    <input type="text" id="coachName" required>
-                </div>
-                <div class="form-group">
-                    <label>Описание</label>
-                    <textarea id="coachDescription"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Фото (URL)</label>
-                    <input type="text" id="coachPhoto" placeholder="https://example.com/photo.jpg">
-                </div>
-                <div class="form-group">
-                    <label>Порядок</label>
-                    <input type="number" id="coachOrder" value="0">
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeCoachModal()">Отмена</button>
-                    <button type="submit" class="btn-primary">Сохранить</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal for Media -->
-    <div id="mediaModal" class="modal-overlay hidden" style="display: none;">
-        <div class="modal">
-            <h3 id="mediaModalTitle">Добавить медиа</h3>
-            <form id="mediaForm">
-                <input type="hidden" id="mediaId">
-                <div class="form-group">
-                    <label>URL / Файл</label>
-                    <input type="text" id="mediaUrl" placeholder="https://example.com/image.jpg">
-                    <input type="file" id="mediaFile" accept="image/*,video/*" style="margin-top: 10px;">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Тип</label>
-                        <select id="mediaType">
-                            <option value="image">Изображение</option>
-                            <option value="video">Видео</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Категория</label>
-                        <input type="text" id="mediaCategory" placeholder="Тренировки, Сборы, Соревнования">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Порядок</label>
-                    <input type="number" id="mediaOrder" value="0">
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeMediaModal()">Отмена</button>
-                    <button type="submit" class="btn-primary">Сохранить</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
         const API_URL = '/api';
         let token = localStorage.getItem('token');
@@ -577,21 +300,6 @@
                 throw err;
             }
         }
-
-        // Инициализация: скрытие всех модальных окон при загрузке страницы
-        (function() {
-            const hideModals = () => {
-                document.querySelectorAll('.modal-overlay').forEach(modal => {
-                    modal.classList.add('hidden');
-                });
-            };
-            // Выполнение сразу, если DOM готов
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', hideModals);
-            } else {
-                hideModals();
-            }
-        })();
 
         // Проверка и восстановление токена при загрузке
         async function initAdmin() {
@@ -907,111 +615,14 @@
             }
         }
 
+        // Функции addSchedule и editSchedule удалены - используется React версия админки
         async function addSchedule() {
-            document.getElementById('scheduleModalTitle').textContent = 'Добавить группу';
-            document.getElementById('scheduleForm').reset();
-            document.getElementById('scheduleId').value = '';
-            document.getElementById('scheduleIsActive').checked = true;
-            document.getElementById('scheduleModal').classList.remove('hidden');
+            alert('Используйте React версию админки на /admin');
         }
 
         async function editSchedule(id) {
-            // Валидация ID
-            const numId = parseInt(id);
-            if (isNaN(numId) || numId <= 0) {
-                console.error('Invalid schedule ID:', id);
-                alert('Некорректный ID группы');
-                return;
-            }
-
-            try {
-                const schedule = await safeFetchJson(`${API_URL}/admin/schedule`);
-                if (!Array.isArray(schedule)) {
-                    console.error('Expected array, got:', schedule);
-                    return;
-                }
-                const item = schedule.find(s => s.id === numId);
-                if (!item) {
-                    alert('Группа не найдена');
-                    return;
-                }
-
-                document.getElementById('scheduleModalTitle').textContent = 'Редактировать группу';
-                document.getElementById('scheduleId').value = item.id;
-                document.getElementById('scheduleGroup').value = item.group || '';
-                document.getElementById('scheduleAgeRange').value = item.age_range || '';
-                document.getElementById('scheduleDays').value = item.days || '';
-                document.getElementById('scheduleTime').value = item.time || '';
-                document.getElementById('scheduleLocation').value = item.location || '';
-                document.getElementById('scheduleSpots').value = item.spots || 0;
-                document.getElementById('scheduleIsActive').checked = item.is_active !== false;
-                document.getElementById('scheduleOrder').value = item.order || 0;
-                document.getElementById('scheduleModal').classList.remove('hidden');
-            } catch (err) {
-                console.error('Failed to load schedule for editing:', err);
-                alert('Ошибка загрузки данных');
-            }
+            alert('Используйте React версию админки на /admin');
         }
-
-        // Определение функций закрытия и их глобальная доступность
-        window.closeScheduleModal = function() {
-            const modal = document.getElementById('scheduleModal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        };
-        const closeScheduleModal = window.closeScheduleModal;
-
-        document.getElementById('scheduleForm').onsubmit = async (e) => {
-            e.preventDefault();
-            try {
-                const id = document.getElementById('scheduleId').value;
-                const numId = id ? parseInt(id) : null;
-                
-                // Валидация ID если редактирование
-                if (id && (isNaN(numId) || numId <= 0)) {
-                    alert('Некорректный ID группы');
-                    return;
-                }
-
-                const data = {
-                    group: document.getElementById('scheduleGroup').value.trim(),
-                    age_range: document.getElementById('scheduleAgeRange').value.trim(),
-                    days: document.getElementById('scheduleDays').value.trim(),
-                    time: document.getElementById('scheduleTime').value.trim(),
-                    location: document.getElementById('scheduleLocation').value.trim(),
-                    spots: parseInt(document.getElementById('scheduleSpots').value) || 0,
-                    is_active: document.getElementById('scheduleIsActive').checked,
-                    order: parseInt(document.getElementById('scheduleOrder').value) || 0
-                };
-
-                // Валидация
-                if (!data.group || !data.age_range || !data.days || !data.time || !data.location) {
-                    alert('Заполните все обязательные поля');
-                    return;
-                }
-
-                // Валидация числовых полей
-                if (data.spots < 0) {
-                    alert('Количество мест не может быть отрицательным');
-                    return;
-                }
-
-                const url = numId ? `${API_URL}/admin/schedule/${numId}` : `${API_URL}/admin/schedule`;
-                const method = numId ? 'PUT' : 'POST';
-
-                await authenticatedFetch(url, {
-                    method,
-                    body: JSON.stringify(data)
-                });
-
-                closeScheduleModal();
-                await loadSchedule();
-            } catch (err) {
-                console.error('Failed to save schedule:', err);
-                alert('Ошибка сохранения');
-            }
-        };
 
         async function deleteSchedule(id) {
             // Валидация ID
@@ -1066,132 +677,14 @@
             }
         }
 
+        // Функции addLocation и editLocation удалены - используется React версия админки
         async function addLocation() {
-            document.getElementById('locationModalTitle').textContent = 'Добавить локацию';
-            document.getElementById('locationForm').reset();
-            document.getElementById('locationId').value = '';
-            document.getElementById('locationModal').classList.remove('hidden');
+            alert('Используйте React версию админки на /admin');
         }
 
         async function editLocation(id) {
-            // Валидация ID
-            const numId = parseInt(id);
-            if (isNaN(numId) || numId <= 0) {
-                console.error('Invalid location ID:', id);
-                alert('Некорректный ID локации');
-                return;
-            }
-
-            try {
-                const locations = await safeFetchJson(`${API_URL}/admin/locations`);
-                if (!Array.isArray(locations)) {
-                    console.error('Expected array, got:', locations);
-                    return;
-                }
-                const item = locations.find(l => l.id === numId);
-                if (!item) {
-                    alert('Локация не найдена');
-                    return;
-                }
-
-                document.getElementById('locationModalTitle').textContent = 'Редактировать локацию';
-                document.getElementById('locationId').value = item.id;
-                document.getElementById('locationTitle').value = item.title || '';
-                document.getElementById('locationAddress').value = item.address || '';
-                document.getElementById('locationDescription').value = item.description || '';
-                
-                // Безопасная обработка JSON для features
-                try {
-                    const features = typeof item.features === 'string' ? item.features : JSON.stringify(item.features || []);
-                    document.getElementById('locationFeatures').value = features;
-                } catch (e) {
-                    document.getElementById('locationFeatures').value = JSON.stringify(item.features || []);
-                }
-                
-                document.getElementById('locationIconType').value = item.icon_type || 'MapPin';
-                document.getElementById('locationOrder').value = item.order || 0;
-                document.getElementById('locationModal').classList.remove('hidden');
-            } catch (err) {
-                console.error('Failed to load location for editing:', err);
-                alert('Ошибка загрузки данных');
-            }
+            alert('Используйте React версию админки на /admin');
         }
-
-        window.closeLocationModal = function() {
-            const modal = document.getElementById('locationModal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        };
-        const closeLocationModal = window.closeLocationModal;
-
-        document.getElementById('locationForm').onsubmit = async (e) => {
-            e.preventDefault();
-            try {
-                const id = document.getElementById('locationId').value;
-                const numId = id ? parseInt(id) : null;
-                
-                // Валидация ID если редактирование
-                if (id && (isNaN(numId) || numId <= 0)) {
-                    alert('Некорректный ID локации');
-                    return;
-                }
-
-                let features = document.getElementById('locationFeatures').value.trim();
-                
-                // Валидация и парсинг JSON для features
-                if (features) {
-                    try {
-                        features = JSON.parse(features);
-                        if (!Array.isArray(features)) {
-                            alert('Особенности должны быть массивом JSON');
-                            return;
-                        }
-                    } catch (parseErr) {
-                        alert('Некорректный формат JSON для особенностей');
-                        return;
-                    }
-                } else {
-                    features = [];
-                }
-                
-                const data = {
-                    title: document.getElementById('locationTitle').value.trim(),
-                    address: document.getElementById('locationAddress').value.trim(),
-                    description: document.getElementById('locationDescription').value.trim(),
-                    features: features,
-                    icon_type: document.getElementById('locationIconType').value,
-                    order: parseInt(document.getElementById('locationOrder').value) || 0
-                };
-
-                // Валидация
-                if (!data.title || !data.address) {
-                    alert('Заполните все обязательные поля');
-                    return;
-                }
-
-                // Валидация icon_type
-                const validIconTypes = ['MapPin', 'Bike', 'Mountain'];
-                if (!validIconTypes.includes(data.icon_type)) {
-                    alert('Некорректный тип иконки');
-                    return;
-                }
-
-                const url = numId ? `${API_URL}/admin/locations/${numId}` : `${API_URL}/admin/locations`;
-                const method = numId ? 'PUT' : 'POST';
-
-                await authenticatedFetch(url, {
-                    method,
-                    body: JSON.stringify(data)
-                });
-
-                closeLocationModal();
-                await loadLocations();
-            } catch (err) {
-                console.error('Failed to save location:', err);
-                alert('Ошибка сохранения');
-            }
-        };
 
         async function deleteLocation(id) {
             // Валидация ID
@@ -1247,158 +740,14 @@
             }
         }
 
+        // Функции addCamp и editCamp удалены - используется React версия админки
         async function addCamp() {
-            document.getElementById('campModalTitle').textContent = 'Добавить сборы';
-            document.getElementById('campForm').reset();
-            document.getElementById('campId').value = '';
-            document.getElementById('campIsActive').checked = true;
-            document.getElementById('campModal').classList.remove('hidden');
+            alert('Используйте React версию админки на /admin');
         }
 
         async function editCamp(id) {
-            // Валидация ID
-            const numId = parseInt(id);
-            if (isNaN(numId) || numId <= 0) {
-                console.error('Invalid camp ID:', id);
-                alert('Некорректный ID сборов');
-                return;
-            }
-
-            try {
-                const camps = await safeFetchJson(`${API_URL}/admin/camps`);
-                if (!Array.isArray(camps)) {
-                    console.error('Expected array, got:', camps);
-                    return;
-                }
-                const item = camps.find(c => c.id === numId);
-                if (!item) {
-                    alert('Сборы не найдены');
-                    return;
-                }
-
-                document.getElementById('campModalTitle').textContent = 'Редактировать сборы';
-                document.getElementById('campId').value = item.id;
-                document.getElementById('campTitle').value = item.title || '';
-                document.getElementById('campLocation').value = item.location || '';
-                document.getElementById('campLocationDesc').value = item.location_desc || '';
-                document.getElementById('campDates').value = item.dates || '';
-                document.getElementById('campDuration').value = item.duration || '';
-                document.getElementById('campGroupSize').value = item.group_size || '';
-                document.getElementById('campGroupDesc').value = item.group_desc || '';
-                document.getElementById('campTrainingDesc').value = item.training_desc || '';
-                
-                // Безопасная обработка JSON полей
-                try {
-                    const includedItems = typeof item.included_items === 'string' ? item.included_items : JSON.stringify(item.included_items || []);
-                    document.getElementById('campIncludedItems').value = includedItems;
-                } catch (e) {
-                    document.getElementById('campIncludedItems').value = JSON.stringify(item.included_items || []);
-                }
-                
-                try {
-                    const stats = typeof item.stats === 'string' ? item.stats : JSON.stringify(item.stats || {});
-                    document.getElementById('campStats').value = stats;
-                } catch (e) {
-                    document.getElementById('campStats').value = JSON.stringify(item.stats || {});
-                }
-                
-                document.getElementById('campIsActive').checked = item.is_active !== false;
-                document.getElementById('campModal').classList.remove('hidden');
-            } catch (err) {
-                console.error('Failed to load camp for editing:', err);
-                alert('Ошибка загрузки данных');
-            }
+            alert('Используйте React версию админки на /admin');
         }
-
-        window.closeCampModal = function() {
-            const modal = document.getElementById('campModal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        };
-        const closeCampModal = window.closeCampModal;
-
-        document.getElementById('campForm').onsubmit = async (e) => {
-            e.preventDefault();
-            try {
-                const id = document.getElementById('campId').value;
-                const numId = id ? parseInt(id) : null;
-                
-                // Валидация ID если редактирование
-                if (id && (isNaN(numId) || numId <= 0)) {
-                    alert('Некорректный ID сборов');
-                    return;
-                }
-                
-                // Валидация и парсинг JSON для included_items
-                let includedItems = document.getElementById('campIncludedItems').value.trim();
-                if (includedItems) {
-                    try {
-                        includedItems = JSON.parse(includedItems);
-                        if (!Array.isArray(includedItems)) {
-                            alert('Включенные элементы должны быть массивом JSON');
-                            return;
-                        }
-                    } catch (parseErr) {
-                        alert('Некорректный формат JSON для включенных элементов');
-                        return;
-                    }
-                } else {
-                    includedItems = [];
-                }
-                
-                // Валидация и парсинг JSON для stats
-                let stats = document.getElementById('campStats').value.trim();
-                if (stats) {
-                    try {
-                        stats = JSON.parse(stats);
-                        if (typeof stats !== 'object' || Array.isArray(stats)) {
-                            alert('Статистика должна быть объектом JSON');
-                            return;
-                        }
-                    } catch (parseErr) {
-                        alert('Некорректный формат JSON для статистики');
-                        return;
-                    }
-                } else {
-                    stats = {};
-                }
-                
-                const data = {
-                    title: document.getElementById('campTitle').value.trim(),
-                    location: document.getElementById('campLocation').value.trim(),
-                    location_desc: document.getElementById('campLocationDesc').value.trim(),
-                    dates: document.getElementById('campDates').value.trim(),
-                    duration: document.getElementById('campDuration').value.trim(),
-                    group_size: document.getElementById('campGroupSize').value.trim(),
-                    group_desc: document.getElementById('campGroupDesc').value.trim(),
-                    training_desc: document.getElementById('campTrainingDesc').value.trim(),
-                    included_items: includedItems,
-                    stats: stats,
-                    is_active: document.getElementById('campIsActive').checked
-                };
-
-                // Валидация
-                if (!data.title || !data.location || !data.dates) {
-                    alert('Заполните все обязательные поля');
-                    return;
-                }
-
-                const url = numId ? `${API_URL}/admin/camps/${numId}` : `${API_URL}/admin/camps`;
-                const method = numId ? 'PUT' : 'POST';
-
-                await authenticatedFetch(url, {
-                    method,
-                    body: JSON.stringify(data)
-                });
-
-                closeCampModal();
-                await loadCamps();
-            } catch (err) {
-                console.error('Failed to save camp:', err);
-                alert('Ошибка сохранения');
-            }
-        };
 
         async function deleteCamp(id) {
             // Валидация ID
@@ -1453,104 +802,14 @@
             }
         }
 
+        // Функции addStat и editStat удалены - используется React версия админки
         async function addStat() {
-            document.getElementById('statModalTitle').textContent = 'Добавить статистику';
-            document.getElementById('statForm').reset();
-            document.getElementById('statId').value = '';
-            document.getElementById('statModal').classList.remove('hidden');
+            alert('Используйте React версию админки на /admin');
         }
 
         async function editStat(id) {
-            // Валидация ID
-            const numId = parseInt(id);
-            if (isNaN(numId) || numId <= 0) {
-                console.error('Invalid stat ID:', id);
-                alert('Некорректный ID статистики');
-                return;
-            }
-
-            try {
-                const stats = await safeFetchJson(`${API_URL}/admin/stats`);
-                if (!Array.isArray(stats)) {
-                    console.error('Expected array, got:', stats);
-                    return;
-                }
-                const item = stats.find(s => s.id === numId);
-                if (!item) {
-                    alert('Статистика не найдена');
-                    return;
-                }
-
-                document.getElementById('statModalTitle').textContent = 'Редактировать статистику';
-                document.getElementById('statId').value = item.id;
-                document.getElementById('statValue').value = item.value || '';
-                document.getElementById('statLabel').value = item.label || '';
-                document.getElementById('statSuffix').value = item.suffix || '';
-                document.getElementById('statIconType').value = item.icon_type || 'Trophy';
-                document.getElementById('statOrder').value = item.order || 0;
-                document.getElementById('statModal').classList.remove('hidden');
-            } catch (err) {
-                console.error('Failed to load stat for editing:', err);
-                alert('Ошибка загрузки данных');
-            }
+            alert('Используйте React версию админки на /admin');
         }
-
-        window.closeStatModal = function() {
-            const modal = document.getElementById('statModal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        };
-        const closeStatModal = window.closeStatModal;
-
-        document.getElementById('statForm').onsubmit = async (e) => {
-            e.preventDefault();
-            try {
-                const id = document.getElementById('statId').value;
-                const numId = id ? parseInt(id) : null;
-                
-                // Валидация ID если редактирование
-                if (id && (isNaN(numId) || numId <= 0)) {
-                    alert('Некорректный ID статистики');
-                    return;
-                }
-
-                const data = {
-                    value: document.getElementById('statValue').value.trim(),
-                    label: document.getElementById('statLabel').value.trim(),
-                    suffix: document.getElementById('statSuffix').value.trim(),
-                    icon_type: document.getElementById('statIconType').value,
-                    order: parseInt(document.getElementById('statOrder').value) || 0
-                };
-
-                // Валидация
-                if (!data.value || !data.label) {
-                    alert('Заполните все обязательные поля');
-                    return;
-                }
-
-                // Валидация icon_type
-                const validIconTypes = ['Trophy', 'Users', 'Award', 'Target'];
-                if (!validIconTypes.includes(data.icon_type)) {
-                    alert('Некорректный тип иконки');
-                    return;
-                }
-
-                const url = numId ? `${API_URL}/admin/stats/${numId}` : `${API_URL}/admin/stats`;
-                const method = numId ? 'PUT' : 'POST';
-
-                await authenticatedFetch(url, {
-                    method,
-                    body: JSON.stringify(data)
-                });
-
-                closeStatModal();
-                await loadStats();
-            } catch (err) {
-                console.error('Failed to save stat:', err);
-                alert('Ошибка сохранения');
-            }
-        };
 
         async function deleteStat(id) {
             // Валидация ID
@@ -1643,93 +902,14 @@
             }
         }
 
+        // Функции addCoach и editCoach удалены - используется React версия админки
         async function addCoach() {
-            document.getElementById('coachModalTitle').textContent = 'Добавить тренера';
-            document.getElementById('coachForm').reset();
-            document.getElementById('coachId').value = '';
-            document.getElementById('coachOrder').value = 0;
-            document.getElementById('coachModal').classList.remove('hidden');
+            alert('Используйте React версию админки на /admin');
         }
 
         async function editCoach(id) {
-            const numId = parseInt(id);
-            if (isNaN(numId) || numId <= 0) {
-                console.error('Invalid coach ID:', id);
-                alert('Некорректный ID тренера');
-                return;
-            }
-
-            try {
-                const coaches = await safeFetchJson(`${API_URL}/admin/coaches`);
-                if (!Array.isArray(coaches)) {
-                    console.error('Expected array, got:', coaches);
-                    return;
-                }
-                const item = coaches.find(c => c.id === numId);
-                if (!item) {
-                    alert('Тренер не найден');
-                    return;
-                }
-
-                document.getElementById('coachModalTitle').textContent = 'Редактировать тренера';
-                document.getElementById('coachId').value = item.id;
-                document.getElementById('coachName').value = item.name || '';
-                document.getElementById('coachDescription').value = item.description || '';
-                document.getElementById('coachPhoto').value = item.photo_url || '';
-                document.getElementById('coachOrder').value = item.order || 0;
-                document.getElementById('coachModal').classList.remove('hidden');
-            } catch (err) {
-                console.error('Failed to load coach for editing:', err);
-                alert('Ошибка загрузки данных');
-            }
+            alert('Используйте React версию админки на /admin');
         }
-
-        window.closeCoachModal = function() {
-            const modal = document.getElementById('coachModal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        };
-        const closeCoachModal = window.closeCoachModal;
-
-        document.getElementById('coachForm').onsubmit = async (e) => {
-            e.preventDefault();
-            try {
-                const id = document.getElementById('coachId').value;
-                const numId = id ? parseInt(id) : null;
-                
-                if (id && (isNaN(numId) || numId <= 0)) {
-                    alert('Некорректный ID тренера');
-                    return;
-                }
-
-                const data = {
-                    name: document.getElementById('coachName').value.trim(),
-                    description: document.getElementById('coachDescription').value.trim(),
-                    photo_url: document.getElementById('coachPhoto').value.trim(),
-                    order: parseInt(document.getElementById('coachOrder').value) || 0
-                };
-
-                if (!data.name) {
-                    alert('Заполните имя тренера');
-                    return;
-                }
-
-                const url = numId ? `${API_URL}/admin/coaches/${numId}` : `${API_URL}/admin/coaches`;
-                const method = numId ? 'PUT' : 'POST';
-
-                await authenticatedFetch(url, {
-                    method,
-                    body: JSON.stringify(data)
-                });
-
-                closeCoachModal();
-                await loadCoaches();
-            } catch (err) {
-                console.error('Failed to save coach:', err);
-                alert('Ошибка сохранения');
-            }
-        };
 
         async function deleteCoach(id) {
             const numId = parseInt(id);
@@ -1785,145 +965,14 @@
             }
         }
 
+        // Функции addMedia и editMedia удалены - используется React версия админки
         async function addMedia() {
-            document.getElementById('mediaModalTitle').textContent = 'Добавить медиа';
-            document.getElementById('mediaForm').reset();
-            document.getElementById('mediaId').value = '';
-            document.getElementById('mediaOrder').value = 0;
-            document.getElementById('mediaType').value = 'image';
-            document.getElementById('mediaModal').classList.remove('hidden');
+            alert('Используйте React версию админки на /admin');
         }
 
         async function editMedia(id) {
-            const numId = parseInt(id);
-            if (isNaN(numId) || numId <= 0) {
-                console.error('Invalid media ID:', id);
-                alert('Некорректный ID медиа');
-                return;
-            }
-
-            try {
-                const media = await safeFetchJson(`${API_URL}/admin/media`);
-                if (!Array.isArray(media)) {
-                    console.error('Expected array, got:', media);
-                    return;
-                }
-                const item = media.find(m => m.id === numId);
-                if (!item) {
-                    alert('Медиа не найдено');
-                    return;
-                }
-
-                document.getElementById('mediaModalTitle').textContent = 'Редактировать медиа';
-                document.getElementById('mediaId').value = item.id;
-                document.getElementById('mediaUrl').value = item.url || '';
-                document.getElementById('mediaType').value = item.type || 'image';
-                document.getElementById('mediaCategory').value = item.category || '';
-                document.getElementById('mediaOrder').value = item.order || 0;
-                document.getElementById('mediaModal').classList.remove('hidden');
-            } catch (err) {
-                console.error('Failed to load media for editing:', err);
-                alert('Ошибка загрузки данных');
-            }
+            alert('Используйте React версию админки на /admin');
         }
-
-        window.closeMediaModal = function() {
-            const modal = document.getElementById('mediaModal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        };
-        const closeMediaModal = window.closeMediaModal;
-
-        document.getElementById('mediaForm').onsubmit = async (e) => {
-            e.preventDefault();
-            try {
-                const id = document.getElementById('mediaId').value;
-                const numId = id ? parseInt(id) : null;
-                
-                if (id && (isNaN(numId) || numId <= 0)) {
-                    alert('Некорректный ID медиа');
-                    return;
-                }
-
-                let mediaUrl = document.getElementById('mediaUrl').value.trim();
-                const fileInput = document.getElementById('mediaFile');
-
-                // Если выбран файл, загружаем его
-                if (fileInput.files.length > 0) {
-                    const formData = new FormData();
-                    formData.append('file', fileInput.files[0]);
-
-                    // Для FormData не нужно устанавливать Content-Type вручную
-                    const uploadRes = await fetch(`${API_URL}/admin/upload`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: formData
-                    });
-
-                    if (uploadRes.status === 401) {
-                        // Пробуем обновить токен
-                        if (refreshToken && await refreshAccessToken()) {
-                            token = localStorage.getItem('token');
-                            // Повторяем запрос
-                            const retryRes = await fetch(`${API_URL}/admin/upload`, {
-                                method: 'POST',
-                                headers: {
-                                    'Authorization': `Bearer ${token}`
-                                },
-                                body: formData
-                            });
-                            if (!retryRes.ok) {
-                                throw new Error('Ошибка загрузки файла');
-                            }
-                            const uploadData = await retryRes.json();
-                            mediaUrl = uploadData.url || mediaUrl;
-                        } else {
-                            throw new Error('Ошибка авторизации');
-                        }
-                    } else if (!uploadRes.ok) {
-                        throw new Error('Ошибка загрузки файла');
-                    } else {
-                        const uploadData = await uploadRes.json();
-                        mediaUrl = uploadData.url || mediaUrl;
-                    }
-                }
-
-                if (!mediaUrl) {
-                    alert('Заполните URL или загрузите файл');
-                    return;
-                }
-
-                const data = {
-                    url: mediaUrl,
-                    type: document.getElementById('mediaType').value,
-                    category: document.getElementById('mediaCategory').value.trim(),
-                    order: parseInt(document.getElementById('mediaOrder').value) || 0
-                };
-
-                const validTypes = ['image', 'video'];
-                if (!validTypes.includes(data.type)) {
-                    alert('Некорректный тип медиа');
-                    return;
-                }
-
-                const url = numId ? `${API_URL}/admin/media/${numId}` : `${API_URL}/admin/media`;
-                const method = numId ? 'PUT' : 'POST';
-
-                await authenticatedFetch(url, {
-                    method,
-                    body: JSON.stringify(data)
-                });
-
-                closeMediaModal();
-                await loadMedia();
-            } catch (err) {
-                console.error('Failed to save media:', err);
-                alert('Ошибка сохранения');
-            }
-        };
 
         async function deleteMedia(id) {
             const numId = parseInt(id);
@@ -1945,14 +994,6 @@
             }
         }
 
-        // Закрытие модальных окон при клике на затемнение
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) {
-                    overlay.classList.add('hidden');
-                }
-            });
-        });
     </script>
 </body>
 </html>

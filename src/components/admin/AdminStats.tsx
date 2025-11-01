@@ -145,13 +145,18 @@ const AdminStats = () => {
 
   return (
     <>
-      <Dialog open={isDialogOpen} onOpenChange={(open) => {
-        setIsDialogOpen(open);
-        if (!open) {
-          setEditingItem(null);
-          setIconType("Trophy");
-        }
-      }}>
+      <Dialog 
+        key={`dialog-${isDialogOpen ? 'open' : 'closed'}-${editingItem?.id || 'new'}`}
+        open={isDialogOpen} 
+        onOpenChange={(open) => {
+          console.log("AdminStats Dialog onOpenChange:", open);
+          setIsDialogOpen(open);
+          if (!open) {
+            setEditingItem(null);
+            setIconType("Trophy");
+          }
+        }}
+      >
         <DialogContent>
             <DialogHeader>
               <DialogTitle>

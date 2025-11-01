@@ -235,8 +235,10 @@ const AdminTrainers = () => {
   return (
     <div className="space-y-4">
       <Dialog
+        key={`dialog-${isDialogOpen ? 'open' : 'closed'}-${editingItem?.id || 'new'}`}
         open={isDialogOpen}
         onOpenChange={(open) => {
+          console.log("AdminTrainers Dialog onOpenChange:", open);
           setIsDialogOpen(open);
           if (!open) {
             setEditingItem(null);
