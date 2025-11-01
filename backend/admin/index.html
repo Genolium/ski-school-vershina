@@ -521,9 +521,30 @@
             const res = await fetch(`${API_URL}/admin/applications`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            
+            if (!res.ok) {
+                console.error('Failed to load applications:', res.status, res.statusText);
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
+                const tbody = document.querySelector('#applicationsTable tbody');
+                tbody.innerHTML = '<tr><td colspan="7" class="error">Ошибка загрузки заявок</td></tr>';
+                return;
+            }
+            
             const apps = await res.json();
             const tbody = document.querySelector('#applicationsTable tbody');
-            tbody.innerHTML = apps.map(app => `
+            
+            if (!Array.isArray(apps)) {
+                console.error('Expected array, got:', apps);
+                tbody.innerHTML = '<tr><td colspan="7" class="error">Некорректный формат данных</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = apps.length === 0 
+                ? '<tr><td colspan="7" class="text-center">Заявок пока нет</td></tr>'
+                : apps.map(app => `
                 <tr>
                     <td>${app.id}</td>
                     <td>${app.name}</td>
