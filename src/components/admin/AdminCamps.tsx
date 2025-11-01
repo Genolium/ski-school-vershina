@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
@@ -45,10 +46,18 @@ const AdminCamps = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Camp | null>(null);
 
-  const { data: camps = [], isLoading } = useQuery({
+  const { data: camps = [], isLoading, error } = useQuery({
     queryKey: ["admin-camps"],
     queryFn: adminGetCamps,
+    retry: 1,
   });
+
+  useEffect(() => {
+    if (error) {
+      console.error("Error loading camps:", error);
+      toast.error("Ошибка загрузки сборов");
+    }
+  }, [error]);
 
   const createMutation = useMutation({
     mutationFn: createCamp,
@@ -114,6 +123,14 @@ const AdminCamps = () => {
 
   if (isLoading) {
     return <div className="text-center py-8">Загрузка...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        Ошибка загрузки сборов. Пожалуйста, обновите страницу.
+      </div>
+    );
   }
 
   return (
@@ -216,7 +233,14 @@ const AdminCamps = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {camps.map((item) => (
+          {camps.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                Сборы не добавлены
+              </TableCell>
+            </TableRow>
+          ) : (
+            camps.map((item) => (
             <TableRow key={item.id}>
               <TableCell>{item.title}</TableCell>
               <TableCell>{item.location}</TableCell>
@@ -256,7 +280,8 @@ const AdminCamps = () => {
                 </div>
               </TableCell>
             </TableRow>
-          ))}
+            ))
+          )}
         </TableBody>
         </Table>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
@@ -51,10 +52,18 @@ const AdminStats = () => {
   const [editingItem, setEditingItem] = useState<Statistic | null>(null);
   const [iconType, setIconType] = useState("Trophy");
 
-  const { data: stats = [], isLoading } = useQuery({
+  const { data: stats = [], isLoading, error } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: adminGetStats,
+    retry: 1,
   });
+
+  useEffect(() => {
+    if (error) {
+      console.error("Error loading stats:", error);
+      toast.error("Ошибка загрузки статистики");
+    }
+  }, [error]);
 
   const createMutation = useMutation({
     mutationFn: createStat,
@@ -124,6 +133,14 @@ const AdminStats = () => {
 
   if (isLoading) {
     return <div className="text-center py-8">Загрузка...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        Ошибка загрузки статистики. Пожалуйста, обновите страницу.
+      </div>
+    );
   }
 
   return (
@@ -219,7 +236,14 @@ const AdminStats = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {stats.map((item) => (
+          {stats.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                Статистика не добавлена
+              </TableCell>
+            </TableRow>
+          ) : (
+            stats.map((item) => (
             <TableRow key={item.id}>
               <TableCell>{item.value}</TableCell>
               <TableCell>{item.label}</TableCell>
@@ -259,7 +283,8 @@ const AdminStats = () => {
                 </div>
               </TableCell>
             </TableRow>
-          ))}
+            ))
+          )}
         </TableBody>
         </Table>
       </div>

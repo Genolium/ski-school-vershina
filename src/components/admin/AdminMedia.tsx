@@ -65,10 +65,18 @@ const AdminMedia = () => {
   });
   const [isUploading, setIsUploading] = useState(false);
 
-  const { data: media = [], isLoading } = useQuery({
+  const { data: media = [], isLoading, error } = useQuery({
     queryKey: ["admin-media"],
     queryFn: adminGetMedia,
+    retry: 1,
   });
+
+  useEffect(() => {
+    if (error) {
+      console.error("Error loading media:", error);
+      toast.error("Ошибка загрузки медиа");
+    }
+  }, [error]);
 
   const createMutation = useMutation({
     mutationFn: createMedia,
@@ -211,7 +219,15 @@ const AdminMedia = () => {
   };
 
   if (isLoading) {
-    return <div>Загрузка...</div>;
+    return <div className="text-center py-8">Загрузка...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        Ошибка загрузки медиа. Пожалуйста, обновите страницу.
+      </div>
+    );
   }
 
   return (
@@ -235,59 +251,67 @@ const AdminMedia = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {media.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell>
-                {item.media_type === "photo" ? (
-                  <img
-                    src={resolveAssetUrl(item.file_path)}
-                    alt={item.title}
-                    className="w-16 h-16 object-cover rounded"
-                  />
-                ) : (
-                  <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
-                    Video
-                  </div>
-                )}
-              </TableCell>
-              <TableCell>{item.title}</TableCell>
-              <TableCell>{item.media_type === "photo" ? "Фото" : "Видео"}</TableCell>
-              <TableCell>{item.category}</TableCell>
-              <TableCell>{item.event_date ? new Date(item.event_date).toLocaleDateString("ru-RU") : "-"}</TableCell>
-              <TableCell>{item.order}</TableCell>
-              <TableCell>{item.is_active ? "Активно" : "Неактивно"}</TableCell>
-              <TableCell>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
-                    Редактировать
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm">
-                        Удалить
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Удалить медиа?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Это действие нельзя отменить.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Отмена</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteMutation.mutate(item.id)}
-                        >
-                          Удалить
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+          {media.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                Медиа не добавлено
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            media.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell>
+                  {item.media_type === "photo" ? (
+                    <img
+                      src={resolveAssetUrl(item.file_path)}
+                      alt={item.title}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
+                      Video
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>{item.title}</TableCell>
+                <TableCell>{item.media_type === "photo" ? "Фото" : "Видео"}</TableCell>
+                <TableCell>{item.category}</TableCell>
+                <TableCell>{item.event_date ? new Date(item.event_date).toLocaleDateString("ru-RU") : "-"}</TableCell>
+                <TableCell>{item.order}</TableCell>
+                <TableCell>{item.is_active ? "Активно" : "Неактивно"}</TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
+                      Редактировать
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          Удалить
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Удалить медиа?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Это действие нельзя отменить.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Отмена</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteMutation.mutate(item.id)}
+                          >
+                            Удалить
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
 

@@ -113,21 +113,50 @@ func AdminCreateCoach(c *gin.Context) {
 }
 
 func AdminUpdateCoach(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	var coach models.Coach
 	if err := database.DB.First(&coach, id).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusNotFound, "Coach not found")
 		return
 	}
-	if err := c.ShouldBindJSON(&coach); err != nil {
+
+	// Используем отдельную структуру для обновления, чтобы не перезаписать ID из URL
+	var updateData struct {
+		Name        string `json:"name"`
+		Position    string `json:"position"`
+		Description string `json:"description"`
+		Photo       string `json:"photo"`
+		Order       int    `json:"order"`
+		// Явно игнорируем ID из JSON, если он придет
+		ID          uint   `json:"id" binding:"-"`
+	}
+
+	if err := c.ShouldBindJSON(&updateData); err != nil {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
 
-	if !ValidateStringLength(coach.Name, 1, 200) || !ValidateStringLength(coach.Position, 1, 200) {
-		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
+	// Валидация обязательных полей
+	if !ValidateStringLength(updateData.Name, 1, 200) {
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid name length")
 		return
 	}
+	if !ValidateStringLength(updateData.Position, 1, 200) {
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid position length")
+		return
+	}
+
+	// Обновление полей (ID остается из URL)
+	coach.Name = updateData.Name
+	coach.Position = updateData.Position
+	coach.Description = updateData.Description
+	coach.Photo = updateData.Photo
+	coach.Order = updateData.Order
 
 	if err := database.DB.Save(&coach).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to update coach")
@@ -140,7 +169,12 @@ func AdminUpdateCoach(c *gin.Context) {
 }
 
 func AdminDeleteCoach(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	if err := database.DB.Delete(&models.Coach{}, id).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to delete coach")
 		return

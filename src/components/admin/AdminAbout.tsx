@@ -13,10 +13,18 @@ const AdminAbout = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  const { data: about, isLoading } = useQuery({
+  const { data: about, isLoading, error } = useQuery({
     queryKey: ["admin-about"],
     queryFn: adminGetAbout,
+    retry: 1,
   });
+
+  useEffect(() => {
+    if (error) {
+      console.error("Error loading about:", error);
+      toast.error("Ошибка загрузки информации");
+    }
+  }, [error]);
 
   useEffect(() => {
     if (about) {
@@ -44,6 +52,14 @@ const AdminAbout = () => {
 
   if (isLoading) {
     return <div className="text-center py-8">Загрузка...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        Ошибка загрузки информации. Пожалуйста, обновите страницу.
+      </div>
+    );
   }
 
   return (

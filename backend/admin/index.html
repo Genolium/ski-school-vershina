@@ -100,6 +100,8 @@
                 <button class="tab" onclick="showTab('camps', event)">Сборы</button>
                 <button class="tab" onclick="showTab('stats', event)">Статистика</button>
                 <button class="tab" onclick="showTab('about', event)">О нас</button>
+                <button class="tab" onclick="showTab('coaches', event)">Тренеры</button>
+                <button class="tab" onclick="showTab('media', event)">Медиа</button>
             </div>
 
             <div id="applications" class="content">
@@ -210,6 +212,45 @@
                     </div>
                     <button type="submit" class="btn-primary">Сохранить</button>
                 </form>
+            </div>
+
+            <div id="coaches" class="content hidden">
+                <div class="content-header">
+                    <h2>Тренеры</h2>
+                    <button class="btn-primary" onclick="addCoach()">Добавить тренера</button>
+                </div>
+                <table id="coachesTable">
+                    <thead>
+                        <tr>
+                            <th>Имя</th>
+                            <th>Описание</th>
+                            <th>Фото</th>
+                            <th>Порядок</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div id="media" class="content hidden">
+                <div class="content-header">
+                    <h2>Медиа-галерея</h2>
+                    <button class="btn-primary" onclick="addMedia()">Добавить медиа</button>
+                </div>
+                <table id="mediaTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>URL</th>
+                            <th>Тип</th>
+                            <th>Категория</th>
+                            <th>Порядок</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -407,6 +448,72 @@
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn-secondary" onclick="closeStatModal()">Отмена</button>
+                    <button type="submit" class="btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Coach -->
+    <div id="coachModal" class="modal-overlay hidden" style="display: none;">
+        <div class="modal">
+            <h3 id="coachModalTitle">Добавить тренера</h3>
+            <form id="coachForm">
+                <input type="hidden" id="coachId">
+                <div class="form-group">
+                    <label>Имя</label>
+                    <input type="text" id="coachName" required>
+                </div>
+                <div class="form-group">
+                    <label>Описание</label>
+                    <textarea id="coachDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Фото (URL)</label>
+                    <input type="text" id="coachPhoto" placeholder="https://example.com/photo.jpg">
+                </div>
+                <div class="form-group">
+                    <label>Порядок</label>
+                    <input type="number" id="coachOrder" value="0">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeCoachModal()">Отмена</button>
+                    <button type="submit" class="btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Media -->
+    <div id="mediaModal" class="modal-overlay hidden" style="display: none;">
+        <div class="modal">
+            <h3 id="mediaModalTitle">Добавить медиа</h3>
+            <form id="mediaForm">
+                <input type="hidden" id="mediaId">
+                <div class="form-group">
+                    <label>URL / Файл</label>
+                    <input type="text" id="mediaUrl" placeholder="https://example.com/image.jpg">
+                    <input type="file" id="mediaFile" accept="image/*,video/*" style="margin-top: 10px;">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Тип</label>
+                        <select id="mediaType">
+                            <option value="image">Изображение</option>
+                            <option value="video">Видео</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Категория</label>
+                        <input type="text" id="mediaCategory" placeholder="Тренировки, Сборы, Соревнования">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Порядок</label>
+                    <input type="number" id="mediaOrder" value="0">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeMediaModal()">Отмена</button>
                     <button type="submit" class="btn-primary">Сохранить</button>
                 </div>
             </form>
@@ -670,6 +777,12 @@
                     break;
                 case 'about':
                     await loadAbout();
+                    break;
+                case 'coaches':
+                    await loadCoaches();
+                    break;
+                case 'media':
+                    await loadMedia();
                     break;
             }
         }
@@ -1502,6 +1615,341 @@
                 alert('Ошибка сохранения');
             }
         };
+
+        // Функции тренеров
+        async function loadCoaches() {
+            try {
+                const coaches = await safeFetchJson(`${API_URL}/admin/coaches`);
+                const tbody = document.querySelector('#coachesTable tbody');
+                
+                if (!Array.isArray(coaches)) {
+                    console.error('Expected array, got:', coaches);
+                    tbody.innerHTML = '<tr><td colspan="5" class="error">Некорректный формат данных</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = coaches.length === 0
+                    ? '<tr><td colspan="5" class="text-center">Тренеров пока нет</td></tr>'
+                    : coaches.map(c => `
+                    <tr>
+                        <td>${escapeHtml(c.name)}</td>
+                        <td>${escapeHtml(c.description ? c.description.substring(0, 50) + '...' : '')}</td>
+                        <td>${c.photo_url ? `<img src="${escapeHtml(c.photo_url)}" alt="${escapeHtml(c.name)}" width="50" height="50" style="object-fit: cover; border-radius: 4px;">` : '—'}</td>
+                        <td>${escapeHtml(c.order)}</td>
+                        <td class="actions-cell">
+                            <button class="btn-primary btn-small" onclick="editCoach(${escapeHtml(c.id)})">Редактировать</button>
+                            <button class="btn-danger btn-small" onclick="deleteCoach(${escapeHtml(c.id)})">Удалить</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load coaches:', err);
+                const tbody = document.querySelector('#coachesTable tbody');
+                tbody.innerHTML = '<tr><td colspan="5" class="error">Ошибка загрузки тренеров</td></tr>';
+            }
+        }
+
+        async function addCoach() {
+            document.getElementById('coachModalTitle').textContent = 'Добавить тренера';
+            document.getElementById('coachForm').reset();
+            document.getElementById('coachId').value = '';
+            document.getElementById('coachOrder').value = 0;
+            document.getElementById('coachModal').classList.remove('hidden');
+        }
+
+        async function editCoach(id) {
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid coach ID:', id);
+                alert('Некорректный ID тренера');
+                return;
+            }
+
+            try {
+                const coaches = await safeFetchJson(`${API_URL}/admin/coaches`);
+                if (!Array.isArray(coaches)) {
+                    console.error('Expected array, got:', coaches);
+                    return;
+                }
+                const item = coaches.find(c => c.id === numId);
+                if (!item) {
+                    alert('Тренер не найден');
+                    return;
+                }
+
+                document.getElementById('coachModalTitle').textContent = 'Редактировать тренера';
+                document.getElementById('coachId').value = item.id;
+                document.getElementById('coachName').value = item.name || '';
+                document.getElementById('coachDescription').value = item.description || '';
+                document.getElementById('coachPhoto').value = item.photo_url || '';
+                document.getElementById('coachOrder').value = item.order || 0;
+                document.getElementById('coachModal').classList.remove('hidden');
+            } catch (err) {
+                console.error('Failed to load coach for editing:', err);
+                alert('Ошибка загрузки данных');
+            }
+        }
+
+        window.closeCoachModal = function() {
+            const modal = document.getElementById('coachModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        };
+        const closeCoachModal = window.closeCoachModal;
+
+        document.getElementById('coachForm').onsubmit = async (e) => {
+            e.preventDefault();
+            try {
+                const id = document.getElementById('coachId').value;
+                const numId = id ? parseInt(id) : null;
+                
+                if (id && (isNaN(numId) || numId <= 0)) {
+                    alert('Некорректный ID тренера');
+                    return;
+                }
+
+                const data = {
+                    name: document.getElementById('coachName').value.trim(),
+                    description: document.getElementById('coachDescription').value.trim(),
+                    photo_url: document.getElementById('coachPhoto').value.trim(),
+                    order: parseInt(document.getElementById('coachOrder').value) || 0
+                };
+
+                if (!data.name) {
+                    alert('Заполните имя тренера');
+                    return;
+                }
+
+                const url = numId ? `${API_URL}/admin/coaches/${numId}` : `${API_URL}/admin/coaches`;
+                const method = numId ? 'PUT' : 'POST';
+
+                await authenticatedFetch(url, {
+                    method,
+                    body: JSON.stringify(data)
+                });
+
+                closeCoachModal();
+                await loadCoaches();
+            } catch (err) {
+                console.error('Failed to save coach:', err);
+                alert('Ошибка сохранения');
+            }
+        };
+
+        async function deleteCoach(id) {
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid coach ID:', id);
+                alert('Некорректный ID тренера');
+                return;
+            }
+
+            if (!confirm('Удалить тренера?')) return;
+            try {
+                await authenticatedFetch(`${API_URL}/admin/coaches/${numId}`, {
+                    method: 'DELETE'
+                });
+                await loadCoaches();
+            } catch (err) {
+                console.error('Failed to delete coach:', err);
+                alert('Ошибка удаления');
+            }
+        }
+
+        // Функции медиа
+        async function loadMedia() {
+            try {
+                const media = await safeFetchJson(`${API_URL}/admin/media`);
+                const tbody = document.querySelector('#mediaTable tbody');
+                
+                if (!Array.isArray(media)) {
+                    console.error('Expected array, got:', media);
+                    tbody.innerHTML = '<tr><td colspan="6" class="error">Некорректный формат данных</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = media.length === 0
+                    ? '<tr><td colspan="6" class="text-center">Медиа пока нет</td></tr>'
+                    : media.map(m => `
+                    <tr>
+                        <td>${escapeHtml(m.id)}</td>
+                        <td><a href="${escapeHtml(m.url)}" target="_blank" style="max-width: 200px; display: block; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(m.url)}</a></td>
+                        <td>${escapeHtml(m.type)}</td>
+                        <td>${escapeHtml(m.category || '')}</td>
+                        <td>${escapeHtml(m.order)}</td>
+                        <td class="actions-cell">
+                            <button class="btn-primary btn-small" onclick="editMedia(${escapeHtml(m.id)})">Редактировать</button>
+                            <button class="btn-danger btn-small" onclick="deleteMedia(${escapeHtml(m.id)})">Удалить</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load media:', err);
+                const tbody = document.querySelector('#mediaTable tbody');
+                tbody.innerHTML = '<tr><td colspan="6" class="error">Ошибка загрузки медиа</td></tr>';
+            }
+        }
+
+        async function addMedia() {
+            document.getElementById('mediaModalTitle').textContent = 'Добавить медиа';
+            document.getElementById('mediaForm').reset();
+            document.getElementById('mediaId').value = '';
+            document.getElementById('mediaOrder').value = 0;
+            document.getElementById('mediaType').value = 'image';
+            document.getElementById('mediaModal').classList.remove('hidden');
+        }
+
+        async function editMedia(id) {
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid media ID:', id);
+                alert('Некорректный ID медиа');
+                return;
+            }
+
+            try {
+                const media = await safeFetchJson(`${API_URL}/admin/media`);
+                if (!Array.isArray(media)) {
+                    console.error('Expected array, got:', media);
+                    return;
+                }
+                const item = media.find(m => m.id === numId);
+                if (!item) {
+                    alert('Медиа не найдено');
+                    return;
+                }
+
+                document.getElementById('mediaModalTitle').textContent = 'Редактировать медиа';
+                document.getElementById('mediaId').value = item.id;
+                document.getElementById('mediaUrl').value = item.url || '';
+                document.getElementById('mediaType').value = item.type || 'image';
+                document.getElementById('mediaCategory').value = item.category || '';
+                document.getElementById('mediaOrder').value = item.order || 0;
+                document.getElementById('mediaModal').classList.remove('hidden');
+            } catch (err) {
+                console.error('Failed to load media for editing:', err);
+                alert('Ошибка загрузки данных');
+            }
+        }
+
+        window.closeMediaModal = function() {
+            const modal = document.getElementById('mediaModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        };
+        const closeMediaModal = window.closeMediaModal;
+
+        document.getElementById('mediaForm').onsubmit = async (e) => {
+            e.preventDefault();
+            try {
+                const id = document.getElementById('mediaId').value;
+                const numId = id ? parseInt(id) : null;
+                
+                if (id && (isNaN(numId) || numId <= 0)) {
+                    alert('Некорректный ID медиа');
+                    return;
+                }
+
+                let mediaUrl = document.getElementById('mediaUrl').value.trim();
+                const fileInput = document.getElementById('mediaFile');
+
+                // Если выбран файл, загружаем его
+                if (fileInput.files.length > 0) {
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+
+                    // Для FormData не нужно устанавливать Content-Type вручную
+                    const uploadRes = await fetch(`${API_URL}/admin/upload`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+
+                    if (uploadRes.status === 401) {
+                        // Пробуем обновить токен
+                        if (refreshToken && await refreshAccessToken()) {
+                            token = localStorage.getItem('token');
+                            // Повторяем запрос
+                            const retryRes = await fetch(`${API_URL}/admin/upload`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: formData
+                            });
+                            if (!retryRes.ok) {
+                                throw new Error('Ошибка загрузки файла');
+                            }
+                            const uploadData = await retryRes.json();
+                            mediaUrl = uploadData.url || mediaUrl;
+                        } else {
+                            throw new Error('Ошибка авторизации');
+                        }
+                    } else if (!uploadRes.ok) {
+                        throw new Error('Ошибка загрузки файла');
+                    } else {
+                        const uploadData = await uploadRes.json();
+                        mediaUrl = uploadData.url || mediaUrl;
+                    }
+                }
+
+                if (!mediaUrl) {
+                    alert('Заполните URL или загрузите файл');
+                    return;
+                }
+
+                const data = {
+                    url: mediaUrl,
+                    type: document.getElementById('mediaType').value,
+                    category: document.getElementById('mediaCategory').value.trim(),
+                    order: parseInt(document.getElementById('mediaOrder').value) || 0
+                };
+
+                const validTypes = ['image', 'video'];
+                if (!validTypes.includes(data.type)) {
+                    alert('Некорректный тип медиа');
+                    return;
+                }
+
+                const url = numId ? `${API_URL}/admin/media/${numId}` : `${API_URL}/admin/media`;
+                const method = numId ? 'PUT' : 'POST';
+
+                await authenticatedFetch(url, {
+                    method,
+                    body: JSON.stringify(data)
+                });
+
+                closeMediaModal();
+                await loadMedia();
+            } catch (err) {
+                console.error('Failed to save media:', err);
+                alert('Ошибка сохранения');
+            }
+        };
+
+        async function deleteMedia(id) {
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid media ID:', id);
+                alert('Некорректный ID медиа');
+                return;
+            }
+
+            if (!confirm('Удалить медиа?')) return;
+            try {
+                await authenticatedFetch(`${API_URL}/admin/media/${numId}`, {
+                    method: 'DELETE'
+                });
+                await loadMedia();
+            } catch (err) {
+                console.error('Failed to delete media:', err);
+                alert('Ошибка удаления');
+            }
+        }
 
         // Закрытие модальных окон при клике на затемнение
         document.querySelectorAll('.modal-overlay').forEach(overlay => {

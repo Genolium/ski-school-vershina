@@ -84,20 +84,82 @@ func AdminCreateMedia(c *gin.Context) {
 }
 
 func AdminUpdateMedia(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	var media models.Media
 	if err := database.DB.First(&media, id).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusNotFound, "Media not found")
 		return
 	}
 
-	if err := c.ShouldBindJSON(&media); err != nil {
+	// Используем отдельную структуру для обновления
+	var updateData struct {
+		Title       *string            `json:"title"`
+		Description *string            `json:"description"`
+		FilePath    *string            `json:"file_path"`
+		MediaType   *models.MediaType  `json:"media_type"`
+		Category    *string            `json:"category"`
+		EventDate   *string            `json:"event_date"` // ISO date string
+		Order       *int               `json:"order"`
+		IsActive    *bool              `json:"is_active"`
+	}
+
+	if err := c.ShouldBindJSON(&updateData); err != nil {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
 
-	if !ValidateStringLength(media.Title, 1, 200) {
-		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid title length")
+	// Обновление только переданных полей
+	if updateData.Title != nil {
+		if !ValidateStringLength(*updateData.Title, 1, 200) {
+			SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid title length")
+			return
+		}
+		media.Title = *updateData.Title
+	}
+	if updateData.Description != nil {
+		media.Description = *updateData.Description
+	}
+	if updateData.FilePath != nil {
+		media.FilePath = *updateData.FilePath
+	}
+	if updateData.MediaType != nil {
+		// Проверка валидности типа
+		if *updateData.MediaType != models.MediaTypePhoto && *updateData.MediaType != models.MediaTypeVideo {
+			SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid media type")
+			return
+		}
+		media.MediaType = *updateData.MediaType
+	}
+	if updateData.Category != nil {
+		media.Category = *updateData.Category
+	}
+	if updateData.EventDate != nil {
+		if *updateData.EventDate != "" {
+			parsedDate, err := time.Parse("2006-01-02", *updateData.EventDate)
+			if err != nil {
+				SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid date format")
+				return
+			}
+			media.EventDate = &parsedDate
+		} else {
+			media.EventDate = nil
+		}
+	}
+	if updateData.Order != nil {
+		media.Order = *updateData.Order
+	}
+	if updateData.IsActive != nil {
+		media.IsActive = *updateData.IsActive
+	}
+
+	// Валидация обязательных полей перед сохранением
+	if !ValidateStringLength(media.Title, 1, 200) || media.FilePath == "" {
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "Title and file_path are required")
 		return
 	}
 
@@ -112,7 +174,12 @@ func AdminUpdateMedia(c *gin.Context) {
 }
 
 func AdminDeleteMedia(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	if err := database.DB.Delete(&models.Media{}, id).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to delete media")
 		return

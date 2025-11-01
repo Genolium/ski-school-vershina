@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
@@ -55,10 +55,18 @@ const AdminTrainers = () => {
   });
   const [isUploading, setIsUploading] = useState(false);
 
-  const { data: coaches = [], isLoading } = useQuery({
+  const { data: coaches = [], isLoading, error } = useQuery({
     queryKey: ["admin-coaches"],
     queryFn: adminGetCoaches,
+    retry: 1,
   });
+
+  useEffect(() => {
+    if (error) {
+      console.error("Error loading coaches:", error);
+      toast.error("Ошибка загрузки тренеров");
+    }
+  }, [error]);
 
   const createMutation = useMutation({
     mutationFn: createCoach,
@@ -204,6 +212,14 @@ const AdminTrainers = () => {
 
   if (isLoading) {
     return <div className="text-center py-8">Загрузка...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        Ошибка загрузки тренеров. Пожалуйста, обновите страницу.
+      </div>
+    );
   }
 
   return (

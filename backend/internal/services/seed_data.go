@@ -7,6 +7,13 @@ import (
 )
 
 func SeedInitialData() error {
+	// Проверка: если уже есть группы расписания, не создаем новые
+	var existingScheduleCount int64
+	database.DB.Model(&models.ScheduleGroup{}).Count(&existingScheduleCount)
+	if existingScheduleCount > 0 {
+		return nil // Данные уже заполнены
+	}
+
 	// Заполнение групп расписания
 	scheduleGroups := []models.ScheduleGroup{
 		{Group: "Начальная подготовка", AgeRange: "4-6 лет", Days: "Вт, Чт", Time: "16:00 - 17:00", Location: "Зал (ул. Брянцева 24)", Spots: 5, IsActive: true, Order: 1},
@@ -16,10 +23,15 @@ func SeedInitialData() error {
 	}
 
 	for _, group := range scheduleGroups {
+		// Проверка существования по названию группы И возрастному диапазону для надежности
 		var count int64
-		database.DB.Model(&models.ScheduleGroup{}).Where("`group` = ?", group.Group).Count(&count)
+		database.DB.Model(&models.ScheduleGroup{}).
+			Where("group = ? AND age_range = ?", group.Group, group.AgeRange).
+			Count(&count)
 		if count == 0 {
-			database.DB.Create(&group)
+			if err := database.DB.Create(&group).Error; err != nil {
+				return err
+			}
 		}
 	}
 
@@ -38,7 +50,9 @@ func SeedInitialData() error {
 		var count int64
 		database.DB.Model(&models.Location{}).Where("title = ?", location.Title).Count(&count)
 		if count == 0 {
-			database.DB.Create(&location)
+			if err := database.DB.Create(&location).Error; err != nil {
+				return err
+			}
 		}
 	}
 
@@ -79,7 +93,9 @@ func SeedInitialData() error {
 		var count int64
 		database.DB.Model(&models.Statistic{}).Where("label = ?", stat.Label).Count(&count)
 		if count == 0 {
-			database.DB.Create(&stat)
+			if err := database.DB.Create(&stat).Error; err != nil {
+				return err
+			}
 		}
 	}
 
@@ -115,7 +131,9 @@ func SeedInitialData() error {
 			Stats:         string(campStats),
 			IsActive:      true,
 		}
-		database.DB.Create(&camp)
+		if err := database.DB.Create(&camp).Error; err != nil {
+			return err
+		}
 	}
 
 	// Заполнение раздела "О нас"
@@ -132,7 +150,9 @@ func SeedInitialData() error {
 			Description: "Мы создаем чемпионов и помогаем детям полюбить горнолыжный спорт",
 			Paragraphs:  string(paragraphs),
 		}
-		database.DB.Create(&about)
+		if err := database.DB.Create(&about).Error; err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -43,19 +43,72 @@ func AdminCreateSchedule(c *gin.Context) {
 }
 
 func AdminUpdateSchedule(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	var group models.ScheduleGroup
 	if err := database.DB.First(&group, id).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusNotFound, "Schedule group not found")
 		return
 	}
-	if err := c.ShouldBindJSON(&group); err != nil {
+
+	// Используем отдельную структуру для обновления
+	var updateData struct {
+		Group     *string `json:"group"`
+		AgeRange  *string `json:"age_range"`
+		Days      *string `json:"days"`
+		Time      *string `json:"time"`
+		Location  *string `json:"location"`
+		Spots     *int    `json:"spots"`
+		IsActive  *bool   `json:"is_active"`
+		Order     *int    `json:"order"`
+	}
+
+	if err := c.ShouldBindJSON(&updateData); err != nil {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
 
+	// Обновление только переданных полей
+	if updateData.Group != nil {
+		if !ValidateStringLength(*updateData.Group, 1, 200) {
+			SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid group length")
+			return
+		}
+		group.Group = *updateData.Group
+	}
+	if updateData.AgeRange != nil {
+		if !ValidateStringLength(*updateData.AgeRange, 1, 50) {
+			SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid age_range length")
+			return
+		}
+		group.AgeRange = *updateData.AgeRange
+	}
+	if updateData.Days != nil {
+		group.Days = *updateData.Days
+	}
+	if updateData.Time != nil {
+		group.Time = *updateData.Time
+	}
+	if updateData.Location != nil {
+		group.Location = *updateData.Location
+	}
+	if updateData.Spots != nil {
+		group.Spots = *updateData.Spots
+	}
+	if updateData.IsActive != nil {
+		group.IsActive = *updateData.IsActive
+	}
+	if updateData.Order != nil {
+		group.Order = *updateData.Order
+	}
+
+	// Валидация обязательных полей перед сохранением
 	if !ValidateStringLength(group.Group, 1, 200) || !ValidateStringLength(group.AgeRange, 1, 50) {
-		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "Group and age_range are required")
 		return
 	}
 
@@ -70,7 +123,12 @@ func AdminUpdateSchedule(c *gin.Context) {
 }
 
 func AdminDeleteSchedule(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	if err := database.DB.Delete(&models.ScheduleGroup{}, id).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to delete schedule group")
 		return
@@ -113,19 +171,76 @@ func AdminCreateLocation(c *gin.Context) {
 }
 
 func AdminUpdateLocation(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	var location models.Location
 	if err := database.DB.First(&location, id).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusNotFound, "Location not found")
 		return
 	}
-	if err := c.ShouldBindJSON(&location); err != nil {
+
+	// Используем отдельную структуру для обновления
+	var updateData struct {
+		Title       *string  `json:"title"`
+		Address     *string  `json:"address"`
+		Description *string  `json:"description"`
+		Features    *string  `json:"features"`
+		IconType    *string  `json:"icon_type"`
+		Latitude    *float64 `json:"latitude"`
+		Longitude   *float64 `json:"longitude"`
+		RouteURL    *string  `json:"route_url"`
+		Order       *int     `json:"order"`
+	}
+
+	if err := c.ShouldBindJSON(&updateData); err != nil {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
 
+	// Обновление только переданных полей
+	if updateData.Title != nil {
+		if !ValidateStringLength(*updateData.Title, 1, 200) {
+			SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid title length")
+			return
+		}
+		location.Title = *updateData.Title
+	}
+	if updateData.Address != nil {
+		if !ValidateStringLength(*updateData.Address, 1, 500) {
+			SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid address length")
+			return
+		}
+		location.Address = *updateData.Address
+	}
+	if updateData.Description != nil {
+		location.Description = *updateData.Description
+	}
+	if updateData.Features != nil {
+		location.Features = *updateData.Features
+	}
+	if updateData.IconType != nil {
+		location.IconType = *updateData.IconType
+	}
+	if updateData.Latitude != nil {
+		location.Latitude = *updateData.Latitude
+	}
+	if updateData.Longitude != nil {
+		location.Longitude = *updateData.Longitude
+	}
+	if updateData.RouteURL != nil {
+		location.RouteURL = *updateData.RouteURL
+	}
+	if updateData.Order != nil {
+		location.Order = *updateData.Order
+	}
+
+	// Валидация обязательных полей перед сохранением
 	if !ValidateStringLength(location.Title, 1, 200) || !ValidateStringLength(location.Address, 1, 500) {
-		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "Title and address are required")
 		return
 	}
 
@@ -140,7 +255,12 @@ func AdminUpdateLocation(c *gin.Context) {
 }
 
 func AdminDeleteLocation(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	if err := database.DB.Delete(&models.Location{}, id).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to delete location")
 		return
@@ -183,21 +303,62 @@ func AdminCreateCamp(c *gin.Context) {
 }
 
 func AdminUpdateCamp(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	var camp models.Camp
 	if err := database.DB.First(&camp, id).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusNotFound, "Camp not found")
 		return
 	}
-	if err := c.ShouldBindJSON(&camp); err != nil {
+
+	// Используем отдельную структуру для обновления, чтобы не перезаписать ID из URL
+	var updateData struct {
+		Title         string `json:"title"`
+		Location      string `json:"location"`
+		LocationDesc  string `json:"location_desc"`
+		Dates         string `json:"dates"`
+		Duration      string `json:"duration"`
+		GroupSize     string `json:"group_size"`
+		GroupDesc     string `json:"group_desc"`
+		TrainingDesc  string `json:"training_desc"`
+		IncludedItems string `json:"included_items"`
+		Stats         string `json:"stats"`
+		IsActive      bool   `json:"is_active"`
+		// Явно игнорируем ID из JSON, если он придет
+		ID            uint   `json:"id" binding:"-"`
+	}
+
+	if err := c.ShouldBindJSON(&updateData); err != nil {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
 
-	if !ValidateStringLength(camp.Title, 1, 200) || !ValidateStringLength(camp.Location, 1, 500) {
-		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
+	// Валидация обязательных полей
+	if !ValidateStringLength(updateData.Title, 1, 200) {
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid title length")
 		return
 	}
+	if !ValidateStringLength(updateData.Location, 1, 500) {
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid location length")
+		return
+	}
+
+	// Обновление полей (ID остается из URL)
+	camp.Title = updateData.Title
+	camp.Location = updateData.Location
+	camp.LocationDesc = updateData.LocationDesc
+	camp.Dates = updateData.Dates
+	camp.Duration = updateData.Duration
+	camp.GroupSize = updateData.GroupSize
+	camp.GroupDesc = updateData.GroupDesc
+	camp.TrainingDesc = updateData.TrainingDesc
+	camp.IncludedItems = updateData.IncludedItems
+	camp.Stats = updateData.Stats
+	camp.IsActive = updateData.IsActive
 
 	if err := database.DB.Save(&camp).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to update camp")
@@ -210,7 +371,12 @@ func AdminUpdateCamp(c *gin.Context) {
 }
 
 func AdminDeleteCamp(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	if err := database.DB.Delete(&models.Camp{}, id).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to delete camp")
 		return
@@ -253,21 +419,50 @@ func AdminCreateStat(c *gin.Context) {
 }
 
 func AdminUpdateStat(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	var stat models.Statistic
 	if err := database.DB.First(&stat, id).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusNotFound, "Statistic not found")
 		return
 	}
-	if err := c.ShouldBindJSON(&stat); err != nil {
+
+	// Используем отдельную структуру для обновления, чтобы не перезаписать ID из URL
+	var updateData struct {
+		Label    string `json:"label"`
+		Value    string `json:"value"`
+		Suffix   string `json:"suffix"`
+		IconType string `json:"icon_type"`
+		Order    int    `json:"order"`
+		// Явно игнорируем ID из JSON, если он придет
+		ID       uint   `json:"id" binding:"-"`
+	}
+
+	if err := c.ShouldBindJSON(&updateData); err != nil {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
 
-	if !ValidateStringLength(stat.Label, 1, 200) || !ValidateStringLength(stat.Value, 1, 50) {
-		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
+	// Валидация обязательных полей
+	if !ValidateStringLength(updateData.Label, 1, 200) {
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid label length")
 		return
 	}
+	if !ValidateStringLength(updateData.Value, 1, 50) {
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid value length")
+		return
+	}
+
+	// Обновление полей (ID остается из URL)
+	stat.Label = updateData.Label
+	stat.Value = updateData.Value
+	stat.Suffix = updateData.Suffix
+	stat.IconType = updateData.IconType
+	stat.Order = updateData.Order
 
 	if err := database.DB.Save(&stat).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to update statistic")
@@ -280,7 +475,12 @@ func AdminUpdateStat(c *gin.Context) {
 }
 
 func AdminDeleteStat(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	if err := database.DB.Delete(&models.Statistic{}, id).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to delete statistic")
 		return
@@ -323,21 +523,42 @@ func AdminCreateAbout(c *gin.Context) {
 }
 
 func AdminUpdateAbout(c *gin.Context) {
-	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
 	var about models.AboutContent
 	if err := database.DB.First(&about, id).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusNotFound, "About content not found")
 		return
 	}
-	if err := c.ShouldBindJSON(&about); err != nil {
+
+	// Используем отдельную структуру для обновления, чтобы не перезаписать ID из URL
+	var updateData struct {
+		Title      string `json:"title"`
+		Description string `json:"description"`
+		Paragraphs string `json:"paragraphs"`
+		// Явно игнорируем ID из JSON, если он придет
+		ID         uint   `json:"id" binding:"-"`
+	}
+
+	if err := c.ShouldBindJSON(&updateData); err != nil {
 		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
 		return
 	}
 
-	if !ValidateStringLength(about.Title, 1, 500) {
-		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
+	// Валидация обязательных полей
+	if !ValidateStringLength(updateData.Title, 1, 500) {
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid title length")
 		return
 	}
+
+	// Обновление полей (ID остается из URL)
+	about.Title = updateData.Title
+	about.Description = updateData.Description
+	about.Paragraphs = updateData.Paragraphs
 
 	if err := database.DB.Save(&about).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to update about content")
