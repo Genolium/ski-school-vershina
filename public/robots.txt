@@ -1,0 +1,10 @@
+# robots.txt for Школа горнолыжного спорта Вершина
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://vershina-ski.ru/sitemap.xml
+
+# Disallow admin and private areas (if any)
+Disallow: /admin/
+Disallow: /api/
