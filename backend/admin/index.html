@@ -81,8 +81,8 @@
     <noscript><div><img src="https://mc.yandex.ru/watch/105075135" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     <div id="login" class="login-form">
         <h2>Вход в админ-панель</h2>
-        <input type="text" id="username" placeholder="Имя пользователя" value="admin">
-        <input type="password" id="password" placeholder="Пароль" value="admin123">
+        <input type="text" id="username" placeholder="Имя пользователя" autocomplete="username">
+        <input type="password" id="password" placeholder="Пароль" autocomplete="current-password">
         <button class="btn-primary" onclick="login()">Войти</button>
         <div id="loginError" class="error"></div>
     </div>
@@ -416,6 +416,66 @@
     <script>
         const API_URL = '/api';
         let token = localStorage.getItem('token');
+        let refreshToken = localStorage.getItem('refresh_token');
+
+        // Функция экранирования HTML для предотвращения XSS
+        function escapeHtml(text) {
+            if (text == null) return '';
+            const div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+
+        // Универсальная функция для безопасного выполнения авторизованных запросов
+        async function authenticatedFetch(url, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            };
+
+            let res = await fetch(url, { ...options, ...defaultOptions });
+
+            // Если получили 401, пробуем обновить токен
+            if (res.status === 401 && refreshToken) {
+                const refreshed = await refreshAccessToken();
+                if (refreshed) {
+                    token = localStorage.getItem('token');
+                    // Повторяем запрос с новым токеном
+                    defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+                    res = await fetch(url, { ...options, ...defaultOptions });
+                } else {
+                    logout();
+                    throw new Error('Authentication failed');
+                }
+            }
+
+            if (res.status === 401 && !refreshToken) {
+                logout();
+                throw new Error('Authentication required');
+            }
+
+            return res;
+        }
+
+        // Безопасная загрузка JSON с обработкой ошибок
+        async function safeFetchJson(url, options = {}) {
+            try {
+                const res = await authenticatedFetch(url, options);
+                
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({ error: `HTTP ${res.status}: ${res.statusText}` }));
+                    throw new Error(errorData.error || `Request failed: ${res.status}`);
+                }
+
+                return await res.json();
+            } catch (err) {
+                console.error('Fetch error:', err);
+                throw err;
+            }
+        }
 
         // Инициализация: скрытие всех модальных окон при загрузке страницы
         (function() {
@@ -432,16 +492,85 @@
             }
         })();
 
-        if (token) {
-            document.getElementById('login').classList.add('hidden');
-            document.getElementById('admin').classList.remove('hidden');
-            loadData();
+        // Проверка и восстановление токена при загрузке
+        async function initAdmin() {
+            if (token) {
+                // Проверяем валидность токена, пытаясь загрузить данные
+                try {
+                    await safeFetchJson(`${API_URL}/admin/applications`);
+                } catch (err) {
+                    console.error('Token validation failed:', err);
+                    if (err.message.includes('Authentication')) {
+                        return;
+                    }
+                    // При ошибке сети не выходим, возможно временная проблема
+                }
+                
+                document.getElementById('login').classList.add('hidden');
+                document.getElementById('admin').classList.remove('hidden');
+                
+                // Активируем первую вкладку
+                const firstTab = document.querySelector('.tab');
+                if (firstTab) {
+                    firstTab.click();
+                } else {
+                    // Если вкладок нет, показываем первую секцию
+                    showTab('applications', null);
+                }
+            }
         }
 
+        async function refreshAccessToken() {
+            if (!refreshToken) return false;
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/refresh`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refresh_token: refreshToken })
+                });
+                
+                if (!res.ok) {
+                    return false;
+                }
+                
+                const data = await res.json();
+                token = data.access_token;
+                refreshToken = data.refresh_token;
+                localStorage.setItem('token', token);
+                if (refreshToken) {
+                    localStorage.setItem('refresh_token', refreshToken);
+                }
+                return true;
+            } catch (err) {
+                console.error('Token refresh failed:', err);
+                return false;
+            }
+        }
+
+        initAdmin();
+
         async function login() {
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = '';
+
+            // Валидация входа
+            if (!username || !password) {
+                errorDiv.textContent = 'Заполните все поля';
+                return;
+            }
+
+            if (username.length > 50) {
+                errorDiv.textContent = 'Имя пользователя слишком длинное';
+                return;
+            }
+
+            if (password.length < 8) {
+                errorDiv.textContent = 'Пароль должен содержать минимум 8 символов';
+                return;
+            }
 
             try {
                 const res = await fetch(`${API_URL}/admin/login`, {
@@ -451,25 +580,53 @@
                 });
 
                 if (!res.ok) {
-                    errorDiv.textContent = 'Неверные учетные данные';
+                    const errorData = await res.json().catch(() => ({}));
+                    errorDiv.textContent = errorData.error || 'Неверные учетные данные';
                     return;
                 }
 
                 const data = await res.json();
-                token = data.token;
+                
+                // Исправлено: используем access_token вместо token
+                token = data.access_token;
+                refreshToken = data.refresh_token;
+                
+                if (!token) {
+                    errorDiv.textContent = 'Ошибка: токен не получен';
+                    return;
+                }
+                
                 localStorage.setItem('token', token);
+                if (refreshToken) {
+                    localStorage.setItem('refresh_token', refreshToken);
+                }
+                
+                // Очищаем поля формы
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                
                 document.getElementById('login').classList.add('hidden');
                 document.getElementById('admin').classList.remove('hidden');
-                loadData();
+                
+                // Активируем первую вкладку и загружаем данные
+                const firstTab = document.querySelector('.tab');
+                if (firstTab) {
+                    firstTab.click();
+                } else {
+                    showTab('applications', null);
+                }
             } catch (err) {
+                console.error('Login error:', err);
                 errorDiv.textContent = 'Ошибка подключения';
             }
         }
 
         function logout() {
             token = null;
+            refreshToken = null;
             localStorage.removeItem('token');
-            document.getElementById('login').classList.add('hidden');
+            localStorage.removeItem('refresh_token');
+            document.getElementById('login').classList.remove('hidden');
             document.getElementById('admin').classList.add('hidden');
         }
 
@@ -518,22 +675,17 @@
         }
 
         async function loadApplications() {
-            const res = await fetch(`${API_URL}/admin/applications`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            
-            if (!res.ok) {
-                console.error('Failed to load applications:', res.status, res.statusText);
-                if (res.status === 401) {
-                    logout();
-                    return;
-                }
+            try {
+                const apps = await safeFetchJson(`${API_URL}/admin/applications`);
+                displayApplications(apps);
+            } catch (err) {
+                console.error('Failed to load applications:', err);
                 const tbody = document.querySelector('#applicationsTable tbody');
                 tbody.innerHTML = '<tr><td colspan="7" class="error">Ошибка загрузки заявок</td></tr>';
-                return;
             }
-            
-            const apps = await res.json();
+        }
+
+        function displayApplications(apps) {
             const tbody = document.querySelector('#applicationsTable tbody');
             
             if (!Array.isArray(apps)) {
@@ -546,65 +698,106 @@
                 ? '<tr><td colspan="7" class="text-center">Заявок пока нет</td></tr>'
                 : apps.map(app => `
                 <tr>
-                    <td>${app.id}</td>
-                    <td>${app.name}</td>
-                    <td>${app.phone}</td>
-                    <td>${app.age}</td>
-                    <td><select onchange="updateAppStatus(${app.id}, this.value)">
+                    <td>${escapeHtml(app.id)}</td>
+                    <td>${escapeHtml(app.name)}</td>
+                    <td>${escapeHtml(app.phone)}</td>
+                    <td>${escapeHtml(app.age)}</td>
+                    <td><select onchange="updateAppStatus(${escapeHtml(app.id)}, this.value)">
                         <option ${app.status === 'pending' ? 'selected' : ''}>pending</option>
                         <option ${app.status === 'contacted' ? 'selected' : ''}>contacted</option>
                         <option ${app.status === 'completed' ? 'selected' : ''}>completed</option>
                         <option ${app.status === 'cancelled' ? 'selected' : ''}>cancelled</option>
                     </select></td>
-                    <td>${new Date(app.created_at).toLocaleDateString()}</td>
-                    <td><button class="btn-danger btn-small" onclick="deleteApp(${app.id})">Удалить</button></td>
+                    <td>${escapeHtml(new Date(app.created_at).toLocaleDateString())}</td>
+                    <td><button class="btn-danger btn-small" onclick="deleteApp(${escapeHtml(app.id)})">Удалить</button></td>
                 </tr>
             `).join('');
         }
 
         async function updateAppStatus(id, status) {
-            await fetch(`${API_URL}/admin/applications/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ status })
-            });
-            loadApplications();
+            // Валидация ID
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid application ID:', id);
+                alert('Некорректный ID заявки');
+                return;
+            }
+
+            // Валидация статуса
+            const validStatuses = ['pending', 'contacted', 'completed', 'cancelled'];
+            if (!validStatuses.includes(status)) {
+                console.error('Invalid status:', status);
+                alert('Некорректный статус');
+                return;
+            }
+
+            try {
+                await authenticatedFetch(`${API_URL}/admin/applications/${numId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ status })
+                });
+                await loadApplications();
+            } catch (err) {
+                console.error('Failed to update application status:', err);
+                alert('Ошибка обновления статуса');
+            }
         }
 
         async function deleteApp(id) {
+            // Валидация ID
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid application ID:', id);
+                alert('Некорректный ID заявки');
+                return;
+            }
+
             if (!confirm('Удалить заявку?')) return;
-            await fetch(`${API_URL}/admin/applications/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            loadApplications();
+            try {
+                await authenticatedFetch(`${API_URL}/admin/applications/${numId}`, {
+                    method: 'DELETE'
+                });
+                await loadApplications();
+            } catch (err) {
+                console.error('Failed to delete application:', err);
+                alert('Ошибка удаления заявки');
+            }
         }
 
         // Функции расписания
         async function loadSchedule() {
-            const res = await fetch(`${API_URL}/admin/schedule`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const schedule = await res.json();
-            const tbody = document.querySelector('#scheduleTable tbody');
-            tbody.innerHTML = schedule.map(s => `
-                <tr>
-                    <td>${s.group}</td>
-                    <td>${s.age_range}</td>
-                    <td>${s.days}</td>
-                    <td>${s.time}</td>
-                    <td>${s.location}</td>
-                    <td>${s.spots}</td>
-                    <td>${s.is_active ? 'Да' : 'Нет'}</td>
-                    <td class="actions-cell">
-                        <button class="btn-primary btn-small" onclick="editSchedule(${s.id})">Редактировать</button>
-                        <button class="btn-danger btn-small" onclick="deleteSchedule(${s.id})">Удалить</button>
-                    </td>
-                </tr>
-            `).join('');
+            try {
+                const schedule = await safeFetchJson(`${API_URL}/admin/schedule`);
+                const tbody = document.querySelector('#scheduleTable tbody');
+                
+                if (!Array.isArray(schedule)) {
+                    console.error('Expected array, got:', schedule);
+                    tbody.innerHTML = '<tr><td colspan="8" class="error">Некорректный формат данных</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = schedule.length === 0
+                    ? '<tr><td colspan="8" class="text-center">Групп пока нет</td></tr>'
+                    : schedule.map(s => `
+                    <tr>
+                        <td>${escapeHtml(s.group)}</td>
+                        <td>${escapeHtml(s.age_range)}</td>
+                        <td>${escapeHtml(s.days)}</td>
+                        <td>${escapeHtml(s.time)}</td>
+                        <td>${escapeHtml(s.location)}</td>
+                        <td>${escapeHtml(s.spots)}</td>
+                        <td>${s.is_active ? 'Да' : 'Нет'}</td>
+                        <td class="actions-cell">
+                            <button class="btn-primary btn-small" onclick="editSchedule(${escapeHtml(s.id)})">Редактировать</button>
+                            <button class="btn-danger btn-small" onclick="deleteSchedule(${escapeHtml(s.id)})">Удалить</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load schedule:', err);
+                const tbody = document.querySelector('#scheduleTable tbody');
+                tbody.innerHTML = '<tr><td colspan="8" class="error">Ошибка загрузки расписания</td></tr>';
+            }
         }
 
         async function addSchedule() {
@@ -616,24 +809,41 @@
         }
 
         async function editSchedule(id) {
-            const res = await fetch(`${API_URL}/admin/schedule`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const schedule = await res.json();
-            const item = schedule.find(s => s.id === id);
-            if (!item) return;
+            // Валидация ID
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid schedule ID:', id);
+                alert('Некорректный ID группы');
+                return;
+            }
 
-            document.getElementById('scheduleModalTitle').textContent = 'Редактировать группу';
-            document.getElementById('scheduleId').value = item.id;
-            document.getElementById('scheduleGroup').value = item.group || '';
-            document.getElementById('scheduleAgeRange').value = item.age_range || '';
-            document.getElementById('scheduleDays').value = item.days || '';
-            document.getElementById('scheduleTime').value = item.time || '';
-            document.getElementById('scheduleLocation').value = item.location || '';
-            document.getElementById('scheduleSpots').value = item.spots || 0;
-            document.getElementById('scheduleIsActive').checked = item.is_active !== false;
-            document.getElementById('scheduleOrder').value = item.order || 0;
-            document.getElementById('scheduleModal').classList.remove('hidden');
+            try {
+                const schedule = await safeFetchJson(`${API_URL}/admin/schedule`);
+                if (!Array.isArray(schedule)) {
+                    console.error('Expected array, got:', schedule);
+                    return;
+                }
+                const item = schedule.find(s => s.id === numId);
+                if (!item) {
+                    alert('Группа не найдена');
+                    return;
+                }
+
+                document.getElementById('scheduleModalTitle').textContent = 'Редактировать группу';
+                document.getElementById('scheduleId').value = item.id;
+                document.getElementById('scheduleGroup').value = item.group || '';
+                document.getElementById('scheduleAgeRange').value = item.age_range || '';
+                document.getElementById('scheduleDays').value = item.days || '';
+                document.getElementById('scheduleTime').value = item.time || '';
+                document.getElementById('scheduleLocation').value = item.location || '';
+                document.getElementById('scheduleSpots').value = item.spots || 0;
+                document.getElementById('scheduleIsActive').checked = item.is_active !== false;
+                document.getElementById('scheduleOrder').value = item.order || 0;
+                document.getElementById('scheduleModal').classList.remove('hidden');
+            } catch (err) {
+                console.error('Failed to load schedule for editing:', err);
+                alert('Ошибка загрузки данных');
+            }
         }
 
         // Определение функций закрытия и их глобальная доступность
@@ -647,61 +857,106 @@
 
         document.getElementById('scheduleForm').onsubmit = async (e) => {
             e.preventDefault();
-            const id = document.getElementById('scheduleId').value;
-            const data = {
-                group: document.getElementById('scheduleGroup').value,
-                age_range: document.getElementById('scheduleAgeRange').value,
-                days: document.getElementById('scheduleDays').value,
-                time: document.getElementById('scheduleTime').value,
-                location: document.getElementById('scheduleLocation').value,
-                spots: parseInt(document.getElementById('scheduleSpots').value),
-                is_active: document.getElementById('scheduleIsActive').checked,
-                order: parseInt(document.getElementById('scheduleOrder').value) || 0
-            };
+            try {
+                const id = document.getElementById('scheduleId').value;
+                const numId = id ? parseInt(id) : null;
+                
+                // Валидация ID если редактирование
+                if (id && (isNaN(numId) || numId <= 0)) {
+                    alert('Некорректный ID группы');
+                    return;
+                }
 
-            const url = id ? `${API_URL}/admin/schedule/${id}` : `${API_URL}/admin/schedule`;
-            const method = id ? 'PUT' : 'POST';
+                const data = {
+                    group: document.getElementById('scheduleGroup').value.trim(),
+                    age_range: document.getElementById('scheduleAgeRange').value.trim(),
+                    days: document.getElementById('scheduleDays').value.trim(),
+                    time: document.getElementById('scheduleTime').value.trim(),
+                    location: document.getElementById('scheduleLocation').value.trim(),
+                    spots: parseInt(document.getElementById('scheduleSpots').value) || 0,
+                    is_active: document.getElementById('scheduleIsActive').checked,
+                    order: parseInt(document.getElementById('scheduleOrder').value) || 0
+                };
 
-            await fetch(url, {
-                method,
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
+                // Валидация
+                if (!data.group || !data.age_range || !data.days || !data.time || !data.location) {
+                    alert('Заполните все обязательные поля');
+                    return;
+                }
 
-            closeScheduleModal();
-            loadSchedule();
+                // Валидация числовых полей
+                if (data.spots < 0) {
+                    alert('Количество мест не может быть отрицательным');
+                    return;
+                }
+
+                const url = numId ? `${API_URL}/admin/schedule/${numId}` : `${API_URL}/admin/schedule`;
+                const method = numId ? 'PUT' : 'POST';
+
+                await authenticatedFetch(url, {
+                    method,
+                    body: JSON.stringify(data)
+                });
+
+                closeScheduleModal();
+                await loadSchedule();
+            } catch (err) {
+                console.error('Failed to save schedule:', err);
+                alert('Ошибка сохранения');
+            }
         };
 
         async function deleteSchedule(id) {
+            // Валидация ID
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid schedule ID:', id);
+                alert('Некорректный ID группы');
+                return;
+            }
+
             if (!confirm('Удалить группу?')) return;
-            await fetch(`${API_URL}/admin/schedule/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            loadSchedule();
+            try {
+                await authenticatedFetch(`${API_URL}/admin/schedule/${numId}`, {
+                    method: 'DELETE'
+                });
+                await loadSchedule();
+            } catch (err) {
+                console.error('Failed to delete schedule:', err);
+                alert('Ошибка удаления');
+            }
         }
 
         // Функции локаций
         async function loadLocations() {
-            const res = await fetch(`${API_URL}/admin/locations`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const locations = await res.json();
-            const tbody = document.querySelector('#locationsTable tbody');
-            tbody.innerHTML = locations.map(l => `
-                <tr>
-                    <td>${l.title}</td>
-                    <td>${l.address}</td>
-                    <td>${l.description ? l.description.substring(0, 50) + '...' : ''}</td>
-                    <td class="actions-cell">
-                        <button class="btn-primary btn-small" onclick="editLocation(${l.id})">Редактировать</button>
-                        <button class="btn-danger btn-small" onclick="deleteLocation(${l.id})">Удалить</button>
-                    </td>
-                </tr>
-            `).join('');
+            try {
+                const locations = await safeFetchJson(`${API_URL}/admin/locations`);
+                const tbody = document.querySelector('#locationsTable tbody');
+                
+                if (!Array.isArray(locations)) {
+                    console.error('Expected array, got:', locations);
+                    tbody.innerHTML = '<tr><td colspan="4" class="error">Некорректный формат данных</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = locations.length === 0
+                    ? '<tr><td colspan="4" class="text-center">Локаций пока нет</td></tr>'
+                    : locations.map(l => `
+                    <tr>
+                        <td>${escapeHtml(l.title)}</td>
+                        <td>${escapeHtml(l.address)}</td>
+                        <td>${escapeHtml(l.description ? l.description.substring(0, 50) + '...' : '')}</td>
+                        <td class="actions-cell">
+                            <button class="btn-primary btn-small" onclick="editLocation(${escapeHtml(l.id)})">Редактировать</button>
+                            <button class="btn-danger btn-small" onclick="deleteLocation(${escapeHtml(l.id)})">Удалить</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load locations:', err);
+                const tbody = document.querySelector('#locationsTable tbody');
+                tbody.innerHTML = '<tr><td colspan="4" class="error">Ошибка загрузки локаций</td></tr>';
+            }
         }
 
         async function addLocation() {
@@ -712,22 +967,47 @@
         }
 
         async function editLocation(id) {
-            const res = await fetch(`${API_URL}/admin/locations`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const locations = await res.json();
-            const item = locations.find(l => l.id === id);
-            if (!item) return;
+            // Валидация ID
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid location ID:', id);
+                alert('Некорректный ID локации');
+                return;
+            }
 
-            document.getElementById('locationModalTitle').textContent = 'Редактировать локацию';
-            document.getElementById('locationId').value = item.id;
-            document.getElementById('locationTitle').value = item.title || '';
-            document.getElementById('locationAddress').value = item.address || '';
-            document.getElementById('locationDescription').value = item.description || '';
-            document.getElementById('locationFeatures').value = item.features || '';
-            document.getElementById('locationIconType').value = item.icon_type || 'MapPin';
-            document.getElementById('locationOrder').value = item.order || 0;
-            document.getElementById('locationModal').classList.remove('hidden');
+            try {
+                const locations = await safeFetchJson(`${API_URL}/admin/locations`);
+                if (!Array.isArray(locations)) {
+                    console.error('Expected array, got:', locations);
+                    return;
+                }
+                const item = locations.find(l => l.id === numId);
+                if (!item) {
+                    alert('Локация не найдена');
+                    return;
+                }
+
+                document.getElementById('locationModalTitle').textContent = 'Редактировать локацию';
+                document.getElementById('locationId').value = item.id;
+                document.getElementById('locationTitle').value = item.title || '';
+                document.getElementById('locationAddress').value = item.address || '';
+                document.getElementById('locationDescription').value = item.description || '';
+                
+                // Безопасная обработка JSON для features
+                try {
+                    const features = typeof item.features === 'string' ? item.features : JSON.stringify(item.features || []);
+                    document.getElementById('locationFeatures').value = features;
+                } catch (e) {
+                    document.getElementById('locationFeatures').value = JSON.stringify(item.features || []);
+                }
+                
+                document.getElementById('locationIconType').value = item.icon_type || 'MapPin';
+                document.getElementById('locationOrder').value = item.order || 0;
+                document.getElementById('locationModal').classList.remove('hidden');
+            } catch (err) {
+                console.error('Failed to load location for editing:', err);
+                alert('Ошибка загрузки данных');
+            }
         }
 
         window.closeLocationModal = function() {
@@ -740,60 +1020,124 @@
 
         document.getElementById('locationForm').onsubmit = async (e) => {
             e.preventDefault();
-            const id = document.getElementById('locationId').value;
-            const data = {
-                title: document.getElementById('locationTitle').value,
-                address: document.getElementById('locationAddress').value,
-                description: document.getElementById('locationDescription').value,
-                features: document.getElementById('locationFeatures').value,
-                icon_type: document.getElementById('locationIconType').value,
-                order: parseInt(document.getElementById('locationOrder').value) || 0
-            };
+            try {
+                const id = document.getElementById('locationId').value;
+                const numId = id ? parseInt(id) : null;
+                
+                // Валидация ID если редактирование
+                if (id && (isNaN(numId) || numId <= 0)) {
+                    alert('Некорректный ID локации');
+                    return;
+                }
 
-            const url = id ? `${API_URL}/admin/locations/${id}` : `${API_URL}/admin/locations`;
-            const method = id ? 'PUT' : 'POST';
+                let features = document.getElementById('locationFeatures').value.trim();
+                
+                // Валидация и парсинг JSON для features
+                if (features) {
+                    try {
+                        features = JSON.parse(features);
+                        if (!Array.isArray(features)) {
+                            alert('Особенности должны быть массивом JSON');
+                            return;
+                        }
+                    } catch (parseErr) {
+                        alert('Некорректный формат JSON для особенностей');
+                        return;
+                    }
+                } else {
+                    features = [];
+                }
+                
+                const data = {
+                    title: document.getElementById('locationTitle').value.trim(),
+                    address: document.getElementById('locationAddress').value.trim(),
+                    description: document.getElementById('locationDescription').value.trim(),
+                    features: features,
+                    icon_type: document.getElementById('locationIconType').value,
+                    order: parseInt(document.getElementById('locationOrder').value) || 0
+                };
 
-            await fetch(url, {
-                method,
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
+                // Валидация
+                if (!data.title || !data.address) {
+                    alert('Заполните все обязательные поля');
+                    return;
+                }
 
-            closeLocationModal();
-            loadLocations();
+                // Валидация icon_type
+                const validIconTypes = ['MapPin', 'Bike', 'Mountain'];
+                if (!validIconTypes.includes(data.icon_type)) {
+                    alert('Некорректный тип иконки');
+                    return;
+                }
+
+                const url = numId ? `${API_URL}/admin/locations/${numId}` : `${API_URL}/admin/locations`;
+                const method = numId ? 'PUT' : 'POST';
+
+                await authenticatedFetch(url, {
+                    method,
+                    body: JSON.stringify(data)
+                });
+
+                closeLocationModal();
+                await loadLocations();
+            } catch (err) {
+                console.error('Failed to save location:', err);
+                alert('Ошибка сохранения');
+            }
         };
 
         async function deleteLocation(id) {
+            // Валидация ID
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid location ID:', id);
+                alert('Некорректный ID локации');
+                return;
+            }
+
             if (!confirm('Удалить локацию?')) return;
-            await fetch(`${API_URL}/admin/locations/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            loadLocations();
+            try {
+                await authenticatedFetch(`${API_URL}/admin/locations/${numId}`, {
+                    method: 'DELETE'
+                });
+                await loadLocations();
+            } catch (err) {
+                console.error('Failed to delete location:', err);
+                alert('Ошибка удаления');
+            }
         }
 
         // Функции сборов
         async function loadCamps() {
-            const res = await fetch(`${API_URL}/admin/camps`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const camps = await res.json();
-            const tbody = document.querySelector('#campsTable tbody');
-            tbody.innerHTML = camps.map(c => `
-                <tr>
-                    <td>${c.title}</td>
-                    <td>${c.location}</td>
-                    <td>${c.dates}</td>
-                    <td>${c.is_active ? 'Да' : 'Нет'}</td>
-                    <td class="actions-cell">
-                        <button class="btn-primary btn-small" onclick="editCamp(${c.id})">Редактировать</button>
-                        <button class="btn-danger btn-small" onclick="deleteCamp(${c.id})">Удалить</button>
-                    </td>
-                </tr>
-            `).join('');
+            try {
+                const camps = await safeFetchJson(`${API_URL}/admin/camps`);
+                const tbody = document.querySelector('#campsTable tbody');
+                
+                if (!Array.isArray(camps)) {
+                    console.error('Expected array, got:', camps);
+                    tbody.innerHTML = '<tr><td colspan="5" class="error">Некорректный формат данных</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = camps.length === 0
+                    ? '<tr><td colspan="5" class="text-center">Сборов пока нет</td></tr>'
+                    : camps.map(c => `
+                    <tr>
+                        <td>${escapeHtml(c.title)}</td>
+                        <td>${escapeHtml(c.location)}</td>
+                        <td>${escapeHtml(c.dates)}</td>
+                        <td>${c.is_active ? 'Да' : 'Нет'}</td>
+                        <td class="actions-cell">
+                            <button class="btn-primary btn-small" onclick="editCamp(${escapeHtml(c.id)})">Редактировать</button>
+                            <button class="btn-danger btn-small" onclick="deleteCamp(${escapeHtml(c.id)})">Удалить</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load camps:', err);
+                const tbody = document.querySelector('#campsTable tbody');
+                tbody.innerHTML = '<tr><td colspan="5" class="error">Ошибка загрузки сборов</td></tr>';
+            }
         }
 
         async function addCamp() {
@@ -805,27 +1149,58 @@
         }
 
         async function editCamp(id) {
-            const res = await fetch(`${API_URL}/admin/camps`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const camps = await res.json();
-            const item = camps.find(c => c.id === id);
-            if (!item) return;
+            // Валидация ID
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid camp ID:', id);
+                alert('Некорректный ID сборов');
+                return;
+            }
 
-            document.getElementById('campModalTitle').textContent = 'Редактировать сборы';
-            document.getElementById('campId').value = item.id;
-            document.getElementById('campTitle').value = item.title || '';
-            document.getElementById('campLocation').value = item.location || '';
-            document.getElementById('campLocationDesc').value = item.location_desc || '';
-            document.getElementById('campDates').value = item.dates || '';
-            document.getElementById('campDuration').value = item.duration || '';
-            document.getElementById('campGroupSize').value = item.group_size || '';
-            document.getElementById('campGroupDesc').value = item.group_desc || '';
-            document.getElementById('campTrainingDesc').value = item.training_desc || '';
-            document.getElementById('campIncludedItems').value = item.included_items || '';
-            document.getElementById('campStats').value = item.stats || '';
-            document.getElementById('campIsActive').checked = item.is_active !== false;
-            document.getElementById('campModal').classList.remove('hidden');
+            try {
+                const camps = await safeFetchJson(`${API_URL}/admin/camps`);
+                if (!Array.isArray(camps)) {
+                    console.error('Expected array, got:', camps);
+                    return;
+                }
+                const item = camps.find(c => c.id === numId);
+                if (!item) {
+                    alert('Сборы не найдены');
+                    return;
+                }
+
+                document.getElementById('campModalTitle').textContent = 'Редактировать сборы';
+                document.getElementById('campId').value = item.id;
+                document.getElementById('campTitle').value = item.title || '';
+                document.getElementById('campLocation').value = item.location || '';
+                document.getElementById('campLocationDesc').value = item.location_desc || '';
+                document.getElementById('campDates').value = item.dates || '';
+                document.getElementById('campDuration').value = item.duration || '';
+                document.getElementById('campGroupSize').value = item.group_size || '';
+                document.getElementById('campGroupDesc').value = item.group_desc || '';
+                document.getElementById('campTrainingDesc').value = item.training_desc || '';
+                
+                // Безопасная обработка JSON полей
+                try {
+                    const includedItems = typeof item.included_items === 'string' ? item.included_items : JSON.stringify(item.included_items || []);
+                    document.getElementById('campIncludedItems').value = includedItems;
+                } catch (e) {
+                    document.getElementById('campIncludedItems').value = JSON.stringify(item.included_items || []);
+                }
+                
+                try {
+                    const stats = typeof item.stats === 'string' ? item.stats : JSON.stringify(item.stats || {});
+                    document.getElementById('campStats').value = stats;
+                } catch (e) {
+                    document.getElementById('campStats').value = JSON.stringify(item.stats || {});
+                }
+                
+                document.getElementById('campIsActive').checked = item.is_active !== false;
+                document.getElementById('campModal').classList.remove('hidden');
+            } catch (err) {
+                console.error('Failed to load camp for editing:', err);
+                alert('Ошибка загрузки данных');
+            }
         }
 
         window.closeCampModal = function() {
@@ -838,64 +1213,137 @@
 
         document.getElementById('campForm').onsubmit = async (e) => {
             e.preventDefault();
-            const id = document.getElementById('campId').value;
-            const data = {
-                title: document.getElementById('campTitle').value,
-                location: document.getElementById('campLocation').value,
-                location_desc: document.getElementById('campLocationDesc').value,
-                dates: document.getElementById('campDates').value,
-                duration: document.getElementById('campDuration').value,
-                group_size: document.getElementById('campGroupSize').value,
-                group_desc: document.getElementById('campGroupDesc').value,
-                training_desc: document.getElementById('campTrainingDesc').value,
-                included_items: document.getElementById('campIncludedItems').value,
-                stats: document.getElementById('campStats').value,
-                is_active: document.getElementById('campIsActive').checked
-            };
+            try {
+                const id = document.getElementById('campId').value;
+                const numId = id ? parseInt(id) : null;
+                
+                // Валидация ID если редактирование
+                if (id && (isNaN(numId) || numId <= 0)) {
+                    alert('Некорректный ID сборов');
+                    return;
+                }
+                
+                // Валидация и парсинг JSON для included_items
+                let includedItems = document.getElementById('campIncludedItems').value.trim();
+                if (includedItems) {
+                    try {
+                        includedItems = JSON.parse(includedItems);
+                        if (!Array.isArray(includedItems)) {
+                            alert('Включенные элементы должны быть массивом JSON');
+                            return;
+                        }
+                    } catch (parseErr) {
+                        alert('Некорректный формат JSON для включенных элементов');
+                        return;
+                    }
+                } else {
+                    includedItems = [];
+                }
+                
+                // Валидация и парсинг JSON для stats
+                let stats = document.getElementById('campStats').value.trim();
+                if (stats) {
+                    try {
+                        stats = JSON.parse(stats);
+                        if (typeof stats !== 'object' || Array.isArray(stats)) {
+                            alert('Статистика должна быть объектом JSON');
+                            return;
+                        }
+                    } catch (parseErr) {
+                        alert('Некорректный формат JSON для статистики');
+                        return;
+                    }
+                } else {
+                    stats = {};
+                }
+                
+                const data = {
+                    title: document.getElementById('campTitle').value.trim(),
+                    location: document.getElementById('campLocation').value.trim(),
+                    location_desc: document.getElementById('campLocationDesc').value.trim(),
+                    dates: document.getElementById('campDates').value.trim(),
+                    duration: document.getElementById('campDuration').value.trim(),
+                    group_size: document.getElementById('campGroupSize').value.trim(),
+                    group_desc: document.getElementById('campGroupDesc').value.trim(),
+                    training_desc: document.getElementById('campTrainingDesc').value.trim(),
+                    included_items: includedItems,
+                    stats: stats,
+                    is_active: document.getElementById('campIsActive').checked
+                };
 
-            const url = id ? `${API_URL}/admin/camps/${id}` : `${API_URL}/admin/camps`;
-            const method = id ? 'PUT' : 'POST';
+                // Валидация
+                if (!data.title || !data.location || !data.dates) {
+                    alert('Заполните все обязательные поля');
+                    return;
+                }
 
-            await fetch(url, {
-                method,
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
+                const url = numId ? `${API_URL}/admin/camps/${numId}` : `${API_URL}/admin/camps`;
+                const method = numId ? 'PUT' : 'POST';
 
-            closeCampModal();
-            loadCamps();
+                await authenticatedFetch(url, {
+                    method,
+                    body: JSON.stringify(data)
+                });
+
+                closeCampModal();
+                await loadCamps();
+            } catch (err) {
+                console.error('Failed to save camp:', err);
+                alert('Ошибка сохранения');
+            }
         };
 
         async function deleteCamp(id) {
+            // Валидация ID
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid camp ID:', id);
+                alert('Некорректный ID сборов');
+                return;
+            }
+
             if (!confirm('Удалить сборы?')) return;
-            await fetch(`${API_URL}/admin/camps/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            loadCamps();
+            try {
+                await authenticatedFetch(`${API_URL}/admin/camps/${numId}`, {
+                    method: 'DELETE'
+                });
+                await loadCamps();
+            } catch (err) {
+                console.error('Failed to delete camp:', err);
+                alert('Ошибка удаления');
+            }
         }
 
         // Функции статистики
         async function loadStats() {
-            const res = await fetch(`${API_URL}/admin/stats`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const stats = await res.json();
-            const tbody = document.querySelector('#statsTable tbody');
-            tbody.innerHTML = stats.map(s => `
-                <tr>
-                    <td>${s.value}</td>
-                    <td>${s.label}</td>
-                    <td>${s.suffix || ''}</td>
-                    <td class="actions-cell">
-                        <button class="btn-primary btn-small" onclick="editStat(${s.id})">Редактировать</button>
-                        <button class="btn-danger btn-small" onclick="deleteStat(${s.id})">Удалить</button>
-                    </td>
-                </tr>
-            `).join('');
+            try {
+                const stats = await safeFetchJson(`${API_URL}/admin/stats`);
+                const tbody = document.querySelector('#statsTable tbody');
+                
+                if (!Array.isArray(stats)) {
+                    console.error('Expected array, got:', stats);
+                    tbody.innerHTML = '<tr><td colspan="4" class="error">Некорректный формат данных</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = stats.length === 0
+                    ? '<tr><td colspan="4" class="text-center">Статистики пока нет</td></tr>'
+                    : stats.map(s => `
+                    <tr>
+                        <td>${escapeHtml(s.value)}</td>
+                        <td>${escapeHtml(s.label)}</td>
+                        <td>${escapeHtml(s.suffix || '')}</td>
+                        <td class="actions-cell">
+                            <button class="btn-primary btn-small" onclick="editStat(${escapeHtml(s.id)})">Редактировать</button>
+                            <button class="btn-danger btn-small" onclick="deleteStat(${escapeHtml(s.id)})">Удалить</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+                const tbody = document.querySelector('#statsTable tbody');
+                tbody.innerHTML = '<tr><td colspan="4" class="error">Ошибка загрузки статистики</td></tr>';
+            }
         }
 
         async function addStat() {
@@ -906,21 +1354,38 @@
         }
 
         async function editStat(id) {
-            const res = await fetch(`${API_URL}/admin/stats`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const stats = await res.json();
-            const item = stats.find(s => s.id === id);
-            if (!item) return;
+            // Валидация ID
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid stat ID:', id);
+                alert('Некорректный ID статистики');
+                return;
+            }
 
-            document.getElementById('statModalTitle').textContent = 'Редактировать статистику';
-            document.getElementById('statId').value = item.id;
-            document.getElementById('statValue').value = item.value || '';
-            document.getElementById('statLabel').value = item.label || '';
-            document.getElementById('statSuffix').value = item.suffix || '';
-            document.getElementById('statIconType').value = item.icon_type || 'Trophy';
-            document.getElementById('statOrder').value = item.order || 0;
-            document.getElementById('statModal').classList.remove('hidden');
+            try {
+                const stats = await safeFetchJson(`${API_URL}/admin/stats`);
+                if (!Array.isArray(stats)) {
+                    console.error('Expected array, got:', stats);
+                    return;
+                }
+                const item = stats.find(s => s.id === numId);
+                if (!item) {
+                    alert('Статистика не найдена');
+                    return;
+                }
+
+                document.getElementById('statModalTitle').textContent = 'Редактировать статистику';
+                document.getElementById('statId').value = item.id;
+                document.getElementById('statValue').value = item.value || '';
+                document.getElementById('statLabel').value = item.label || '';
+                document.getElementById('statSuffix').value = item.suffix || '';
+                document.getElementById('statIconType').value = item.icon_type || 'Trophy';
+                document.getElementById('statOrder').value = item.order || 0;
+                document.getElementById('statModal').classList.remove('hidden');
+            } catch (err) {
+                console.error('Failed to load stat for editing:', err);
+                alert('Ошибка загрузки данных');
+            }
         }
 
         window.closeStatModal = function() {
@@ -933,63 +1398,109 @@
 
         document.getElementById('statForm').onsubmit = async (e) => {
             e.preventDefault();
-            const id = document.getElementById('statId').value;
-            const data = {
-                value: document.getElementById('statValue').value,
-                label: document.getElementById('statLabel').value,
-                suffix: document.getElementById('statSuffix').value,
-                icon_type: document.getElementById('statIconType').value,
-                order: parseInt(document.getElementById('statOrder').value) || 0
-            };
+            try {
+                const id = document.getElementById('statId').value;
+                const numId = id ? parseInt(id) : null;
+                
+                // Валидация ID если редактирование
+                if (id && (isNaN(numId) || numId <= 0)) {
+                    alert('Некорректный ID статистики');
+                    return;
+                }
 
-            const url = id ? `${API_URL}/admin/stats/${id}` : `${API_URL}/admin/stats`;
-            const method = id ? 'PUT' : 'POST';
+                const data = {
+                    value: document.getElementById('statValue').value.trim(),
+                    label: document.getElementById('statLabel').value.trim(),
+                    suffix: document.getElementById('statSuffix').value.trim(),
+                    icon_type: document.getElementById('statIconType').value,
+                    order: parseInt(document.getElementById('statOrder').value) || 0
+                };
 
-            await fetch(url, {
-                method,
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
+                // Валидация
+                if (!data.value || !data.label) {
+                    alert('Заполните все обязательные поля');
+                    return;
+                }
 
-            closeStatModal();
-            loadStats();
+                // Валидация icon_type
+                const validIconTypes = ['Trophy', 'Users', 'Award', 'Target'];
+                if (!validIconTypes.includes(data.icon_type)) {
+                    alert('Некорректный тип иконки');
+                    return;
+                }
+
+                const url = numId ? `${API_URL}/admin/stats/${numId}` : `${API_URL}/admin/stats`;
+                const method = numId ? 'PUT' : 'POST';
+
+                await authenticatedFetch(url, {
+                    method,
+                    body: JSON.stringify(data)
+                });
+
+                closeStatModal();
+                await loadStats();
+            } catch (err) {
+                console.error('Failed to save stat:', err);
+                alert('Ошибка сохранения');
+            }
         };
 
         async function deleteStat(id) {
+            // Валидация ID
+            const numId = parseInt(id);
+            if (isNaN(numId) || numId <= 0) {
+                console.error('Invalid stat ID:', id);
+                alert('Некорректный ID статистики');
+                return;
+            }
+
             if (!confirm('Удалить статистику?')) return;
-            await fetch(`${API_URL}/admin/stats/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            loadStats();
+            try {
+                await authenticatedFetch(`${API_URL}/admin/stats/${numId}`, {
+                    method: 'DELETE'
+                });
+                await loadStats();
+            } catch (err) {
+                console.error('Failed to delete stat:', err);
+                alert('Ошибка удаления');
+            }
         }
 
         async function loadAbout() {
-            const res = await fetch(`${API_URL}/admin/about`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const about = await res.json();
-            document.getElementById('aboutTitle').value = about.title || '';
-            document.getElementById('aboutDesc').value = about.description || '';
+            try {
+                const about = await safeFetchJson(`${API_URL}/admin/about`);
+                document.getElementById('aboutTitle').value = about.title || '';
+                document.getElementById('aboutDesc').value = about.description || '';
+            } catch (err) {
+                console.error('Failed to load about:', err);
+                alert('Ошибка загрузки данных');
+            }
         }
 
         document.getElementById('aboutForm').onsubmit = async (e) => {
             e.preventDefault();
-            const res = await fetch(`${API_URL}/admin/about/1`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    title: document.getElementById('aboutTitle').value,
-                    description: document.getElementById('aboutDesc').value
-                })
-            });
-            alert('Сохранено!');
+            try {
+                const data = {
+                    title: document.getElementById('aboutTitle').value.trim(),
+                    description: document.getElementById('aboutDesc').value.trim()
+                };
+
+                // Валидация
+                if (!data.title || !data.description) {
+                    alert('Заполните все поля');
+                    return;
+                }
+
+                await authenticatedFetch(`${API_URL}/admin/about/1`, {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+                
+                alert('Сохранено!');
+            } catch (err) {
+                console.error('Failed to save about:', err);
+                alert('Ошибка сохранения');
+            }
         };
 
         // Закрытие модальных окон при клике на затемнение
