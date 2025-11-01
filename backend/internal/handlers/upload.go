@@ -44,7 +44,8 @@ func UploadFile(c *gin.Context) {
 	}
 
 	// Создание директории для загрузок, если её нет
-	uploadDir := "./public/uploads"
+	// Используем абсолютный путь для Docker контейнера
+	uploadDir := "/app/data/uploads"
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to create upload directory")
 		return

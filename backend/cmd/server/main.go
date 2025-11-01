@@ -143,8 +143,8 @@ func main() {
 		}
 	}
 
-	// Раздача загруженных файлов
-	r.Static("/uploads", "./public/uploads")
+	// Раздача загруженных файлов (из volume для сохранности)
+	r.Static("/uploads", "/app/data/uploads")
 
 	// Раздача favicon
 	r.Static("/favicon", "./public/favicon")

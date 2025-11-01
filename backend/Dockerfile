@@ -32,8 +32,8 @@ COPY backend/admin ./admin
 # Копирование favicon
 COPY public/favicon ./public/favicon
 
-# Создание директории для данных SQLite
-RUN mkdir -p /app/data
+# Создание директорий для данных и загрузок
+RUN mkdir -p /app/data /app/data/uploads
 
 # Открытие порта
 EXPOSE 8080
