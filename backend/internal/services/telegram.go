@@ -5,9 +5,18 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"ski-school-backend/internal/config"
 	"ski-school-backend/internal/models"
 )
+
+// normalizePhoneNumber убирает все символы кроме цифр и + для кликабельности в Telegram
+func normalizePhoneNumber(phone string) string {
+	// Убираем все символы кроме цифр и +
+	re := regexp.MustCompile(`[^\d+]`)
+	normalized := re.ReplaceAllString(phone, "")
+	return normalized
+}
 
 // getTariffOrAge возвращает тариф, если он есть, иначе возраст (для обратной совместимости)
 func getTariffOrAge(application *models.Application) string {
@@ -27,15 +36,18 @@ func SendTelegramNotification(cfg *config.Config, application *models.Applicatio
 		return
 	}
 
+	// Нормализуем номер телефона для кликабельности
+	normalizedPhone := normalizePhoneNumber(application.Phone)
+
 	message := fmt.Sprintf(
 		"🎿 *Новая заявка*\n\n"+
 			"Имя: %s\n"+
-			"Телефон: %s\n"+
+			"Телефон: `%s`\n"+
 			"Тариф: %s\n"+
 			"Статус: Новая\n\n"+
 			"ID заявки: %d",
 		application.Name,
-		application.Phone,
+		normalizedPhone,
 		getTariffOrAge(application),
 		application.ID,
 	)
@@ -75,15 +87,18 @@ func SendTelegramStatusUpdate(cfg *config.Config, application *models.Applicatio
 	newStatusLabel := statusLabels[string(application.Status)]
 	oldStatusLabel := statusLabels[oldStatus]
 
+	// Нормализуем номер телефона для кликабельности
+	normalizedPhone := normalizePhoneNumber(application.Phone)
+
 	message := fmt.Sprintf(
 		"📝 *Обновление заявки*\n\n"+
 			"ID: %d\n"+
 			"Имя: %s\n"+
-			"Телефон: %s\n"+
+			"Телефон: `%s`\n"+
 			"Статус: %s → %s",
 		application.ID,
 		application.Name,
-		application.Phone,
+		normalizedPhone,
 		oldStatusLabel,
 		newStatusLabel,
 	)
