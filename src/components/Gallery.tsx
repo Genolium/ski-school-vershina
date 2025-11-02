@@ -22,21 +22,25 @@ const Gallery = () => {
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
 
   useEffect(() => {
-    const params: { category?: string; type?: "photo" | "video" } = {};
-    if (selectedCategory !== "all") {
-      params.category = selectedCategory;
-    }
-    if (selectedType !== "all") {
-      params.type = selectedType;
-    }
+    // Задержка для оптимизации критического пути - загружаем после LCP
+    const timer = setTimeout(() => {
+      const params: { category?: string; type?: "photo" | "video" } = {};
+      if (selectedCategory !== "all") {
+        params.category = selectedCategory;
+      }
+      if (selectedType !== "all") {
+        params.type = selectedType;
+      }
 
-    getMedia(Object.keys(params).length > 0 ? params : undefined)
-      .then(setMedia)
-      .catch((error) => {
-        logError(error, "Gallery component");
-        setMedia([]);
-      })
-      .finally(() => setLoading(false));
+      getMedia(Object.keys(params).length > 0 ? params : undefined)
+        .then(setMedia)
+        .catch((error) => {
+          logError(error, "Gallery component");
+          setMedia([]);
+        })
+        .finally(() => setLoading(false));
+    }, 400);
+    return () => clearTimeout(timer);
   }, [selectedCategory, selectedType]);
 
   const categories = Array.from(new Set(media.map((m) => m.category))).filter(Boolean);
@@ -173,6 +177,8 @@ const Gallery = () => {
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                       loading="lazy"
+                      decoding="async"
+                      fetchPriority={index < 8 ? "high" : "low"}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-hero relative">
@@ -239,6 +245,8 @@ const Gallery = () => {
                   alt={selectedMedia.title}
                   className="max-w-full max-h-[85vh] sm:max-h-[80vh] md:max-h-[75vh] object-contain rounded-lg shadow-2xl"
                   loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
                 />
               ) : (
                 <video

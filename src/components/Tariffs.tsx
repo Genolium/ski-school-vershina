@@ -12,6 +12,7 @@ const Tariffs = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Тарифы загружаем сразу, так как они видны выше fold
     getTariffs()
       .then(data => {
         setTariffs(data);

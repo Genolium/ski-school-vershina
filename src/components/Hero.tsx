@@ -10,7 +10,7 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image */}
+      {/* Background Image - с оптимизацией */}
       <div 
         className="absolute inset-0 z-0 bg-gradient-to-br from-ski-black via-ski-gray to-ski-black"
         style={{
@@ -18,6 +18,8 @@ const Hero = () => {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
+        role="img"
+        aria-label="Горнолыжный склон"
       />
       
       {/* Additional Dark Overlay for Better Readability */}

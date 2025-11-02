@@ -23,12 +23,16 @@ const Locations = () => {
   const [items, setItems] = useState<Location[]>([]);
 
   useEffect(() => {
-    getLocations()
-      .then(setItems)
-      .catch((error) => {
-        logError(error, 'Locations component');
-        setItems([]);
-      });
+    // Задержка для оптимизации критического пути - загружаем после LCP
+    const timer = setTimeout(() => {
+      getLocations()
+        .then(setItems)
+        .catch((error) => {
+          logError(error, 'Locations component');
+          setItems([]);
+        });
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   const fallbackLocations: Location[] = [

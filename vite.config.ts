@@ -25,6 +25,34 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Оптимизация сборки для производительности
+    target: "es2015",
+    minify: "esbuild",
+    cssMinify: true,
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Выделяем vendor библиотеки в отдельные чанки
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-tabs'],
+          'query-vendor': ['@tanstack/react-query'],
+        },
+        // Оптимизация имен файлов для кэширования
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name?.endsWith('.jpg') || assetInfo.name?.endsWith('.jpeg') || assetInfo.name?.endsWith('.png') || assetInfo.name?.endsWith('.webp')) {
+            return 'assets/images/[name]-[hash][extname]';
+          }
+          return 'assets/[ext]/[name]-[hash][extname]';
+        },
+      },
+    },
+    // Увеличиваем лимит предупреждений о размере чанков
+    chunkSizeWarningLimit: 1000,
+  },
   test: {
     globals: true,
     environment: "jsdom",

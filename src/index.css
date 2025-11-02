@@ -97,6 +97,8 @@
     /* Оптимизация для touch-устройств */
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    /* Оптимизация загрузки шрифтов - fallback пока загружается Jost */
+    font-display: swap;
   }
   
   /* Исключение навигации из шрифта Jost - используется системный шрифт */

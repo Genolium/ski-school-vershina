@@ -27,10 +27,14 @@ const About = () => {
   const [stats, setStats] = useState<Statistic[]>([]);
 
   useEffect(() => {
-    Promise.all([getAbout().catch(() => null), getStats().catch(() => [])]).then(([aboutData, statsData]) => {
-      if (aboutData) setAbout(aboutData);
-      if (Array.isArray(statsData)) setStats(statsData);
-    });
+    // Задержка для оптимизации критического пути - загружаем после LCP
+    const timer = setTimeout(() => {
+      Promise.all([getAbout().catch(() => null), getStats().catch(() => [])]).then(([aboutData, statsData]) => {
+        if (aboutData) setAbout(aboutData);
+        if (Array.isArray(statsData)) setStats(statsData);
+      });
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   const parsedParagraphs = useMemo(() => {
@@ -103,6 +107,9 @@ const About = () => {
               src={groupImage} 
               alt="Дети на групповой тренировке по горным лыжам в школе Вершина" 
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              loading="lazy"
+              decoding="async"
+              fetchPriority="low"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-ski-black/95 via-ski-black/50 to-ski-black/20 flex items-end">
               <p className="p-4 md:p-6 text-ski-white text-base md:text-xl font-bold drop-shadow-2xl shadow-black/50">
@@ -118,6 +125,9 @@ const About = () => {
               src={winnersImage} 
               alt="Победители соревнований по горным лыжам из школы Вершина" 
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              loading="lazy"
+              decoding="async"
+              fetchPriority="low"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-ski-black/95 via-ski-black/50 to-ski-black/20 flex items-end">
               <p className="p-4 md:p-6 text-ski-white text-base md:text-xl font-bold drop-shadow-2xl shadow-black/50">

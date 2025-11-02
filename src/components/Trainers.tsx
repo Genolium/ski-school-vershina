@@ -21,15 +21,19 @@ const Trainers = () => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    getCoaches()
-      .then((data) => {
-        setCoaches(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setCoaches([]);
-        setLoading(false);
-      });
+    // Задержка для оптимизации критического пути - загружаем после LCP
+    const timer = setTimeout(() => {
+      getCoaches()
+        .then((data) => {
+          setCoaches(data);
+          setLoading(false);
+        })
+        .catch(() => {
+          setCoaches([]);
+          setLoading(false);
+        });
+    }, 300);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {

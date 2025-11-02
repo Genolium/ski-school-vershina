@@ -15,15 +15,19 @@ const Camps = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getCamps()
-      .then((data) => {
-        setCamps(data.filter((c) => c.is_active !== false));
-        setLoading(false);
-      })
-      .catch(() => {
-        setCamps([]);
-        setLoading(false);
-      });
+    // Задержка для оптимизации критического пути - загружаем после LCP
+    const timer = setTimeout(() => {
+      getCamps()
+        .then((data) => {
+          setCamps(data.filter((c) => c.is_active !== false));
+          setLoading(false);
+        })
+        .catch(() => {
+          setCamps([]);
+          setLoading(false);
+        });
+    }, 200);
+    return () => clearTimeout(timer);
   }, []);
 
   // Минимальная дистанция для свайпа
