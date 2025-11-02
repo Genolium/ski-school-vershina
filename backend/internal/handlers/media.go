@@ -13,6 +13,8 @@ import (
 func GetMedia(c *gin.Context) {
 	cacheKey := "media"
 	if cached, found := services.GetCached(cacheKey); found {
+		c.Header("Cache-Control", "public, max-age=600") // 10 минут
+		c.Header("Vary", "Accept-Encoding")
 		c.JSON(http.StatusOK, cached)
 		return
 	}
@@ -36,6 +38,8 @@ func GetMedia(c *gin.Context) {
 	}
 
 	services.SetCached(cacheKey, media, 10*time.Minute)
+	c.Header("Cache-Control", "public, max-age=600") // 10 минут
+	c.Header("Vary", "Accept-Encoding")
 	c.JSON(http.StatusOK, media)
 }
 
