@@ -59,7 +59,7 @@ const Navigation = () => {
   }, []);
 
   const navLinks = [
-    { label: "Расписание", id: "schedule" },
+    { label: "Тарифы", id: "tariffs" },
     { label: "Локации", id: "locations" },
     { label: "О нас", id: "about" },
     { label: "Сборы", id: "camps" },
@@ -77,10 +77,10 @@ const Navigation = () => {
           {/* Logo */}
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="text-xl md:text-2xl font-bold text-ski-white hover:text-primary transition-colors touch-manipulation"
+            className="text-xl md:text-2xl font-bold text-primary hover:text-primary/80 transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ski-black rounded-md px-2 py-1"
             aria-label="На главную"
           >
-            ВЕРШИНА
+            VERSHINA
           </button>
 
           {/* Desktop Navigation */}
@@ -89,7 +89,7 @@ const Navigation = () => {
               <button
                 key={link.id}
                 onClick={() => scrollToSection(link.id)}
-                className="text-ski-white hover:text-primary transition-colors font-medium text-sm lg:text-base"
+                className="text-ski-white hover:text-primary transition-colors font-medium text-sm lg:text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ski-black rounded-md px-2 py-1"
               >
                 {link.label}
               </button>
@@ -102,7 +102,7 @@ const Navigation = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden text-ski-white p-2.5 touch-manipulation"
+            className="md:hidden text-ski-white p-2.5 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ski-black rounded-md"
             aria-label={isMobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
             aria-expanded={isMobileMenuOpen}
           >
@@ -121,7 +121,7 @@ const Navigation = () => {
                 <button
                   key={link.id}
                   onClick={() => scrollToSection(link.id)}
-                  className="text-ski-white hover:text-primary transition-colors font-medium text-left px-4 py-3 text-base touch-manipulation"
+                  className="text-ski-white hover:text-primary transition-colors font-medium text-left px-4 py-3 text-base touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ski-black rounded-md"
                 >
                   {link.label}
                 </button>

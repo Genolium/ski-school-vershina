@@ -7,30 +7,27 @@ import (
 )
 
 func SeedInitialData() error {
-	// Проверка: если уже есть группы расписания, не создаем новые
+	// Заполнение групп расписания (проверяем отдельно для каждого типа данных)
 	var existingScheduleCount int64
 	database.DB.Model(&models.ScheduleGroup{}).Count(&existingScheduleCount)
-	if existingScheduleCount > 0 {
-		return nil // Данные уже заполнены
-	}
+	if existingScheduleCount == 0 {
+		scheduleGroups := []models.ScheduleGroup{
+			{Group: "Начальная подготовка", AgeRange: "4-6 лет", Days: "Вт, Чт", Time: "16:00 - 17:00", Location: "Зал (ул. Брянцева 24)", Spots: 5, IsActive: true, Order: 1},
+			{Group: "Базовый уровень", AgeRange: "7-9 лет", Days: "Пн, Ср, Пт", Time: "17:00 - 18:30", Location: "ГК «Снежный»", Spots: 3, IsActive: true, Order: 2},
+			{Group: "Продвинутый уровень", AgeRange: "10-14 лет", Days: "Вт, Чт, Сб", Time: "18:00 - 20:00", Location: "ГК «Снежный»", Spots: 2, IsActive: true, Order: 3},
+			{Group: "Спортивная группа", AgeRange: "12+ лет", Days: "Пн-Сб", Time: "19:00 - 21:00", Location: "ГК «Снежный»", Spots: 4, IsActive: true, Order: 4},
+		}
 
-	// Заполнение групп расписания
-	scheduleGroups := []models.ScheduleGroup{
-		{Group: "Начальная подготовка", AgeRange: "4-6 лет", Days: "Вт, Чт", Time: "16:00 - 17:00", Location: "Зал (ул. Брянцева 24)", Spots: 5, IsActive: true, Order: 1},
-		{Group: "Базовый уровень", AgeRange: "7-9 лет", Days: "Пн, Ср, Пт", Time: "17:00 - 18:30", Location: "ГК «Снежный»", Spots: 3, IsActive: true, Order: 2},
-		{Group: "Продвинутый уровень", AgeRange: "10-14 лет", Days: "Вт, Чт, Сб", Time: "18:00 - 20:00", Location: "ГК «Снежный»", Spots: 2, IsActive: true, Order: 3},
-		{Group: "Спортивная группа", AgeRange: "12+ лет", Days: "Пн-Сб", Time: "19:00 - 21:00", Location: "ГК «Снежный»", Spots: 4, IsActive: true, Order: 4},
-	}
-
-	for _, group := range scheduleGroups {
-		// Проверка существования по названию группы И возрастному диапазону для надежности
-		var count int64
-		database.DB.Model(&models.ScheduleGroup{}).
-			Where("group = ? AND age_range = ?", group.Group, group.AgeRange).
-			Count(&count)
-		if count == 0 {
-			if err := database.DB.Create(&group).Error; err != nil {
-				return err
+		for _, group := range scheduleGroups {
+			// Проверка существования по названию группы И возрастному диапазону для надежности
+			var count int64
+			database.DB.Model(&models.ScheduleGroup{}).
+				Where("group = ? AND age_range = ?", group.Group, group.AgeRange).
+				Count(&count)
+			if count == 0 {
+				if err := database.DB.Create(&group).Error; err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -152,6 +149,57 @@ func SeedInitialData() error {
 		}
 		if err := database.DB.Create(&about).Error; err != nil {
 			return err
+		}
+	}
+
+	// Заполнение тарифов
+	tariffFeatures1, _ := json.Marshal([]string{"1 тренировка в неделю", "Акцент на удовольствие"})
+	tariffFeatures2, _ := json.Marshal([]string{"2 тренировки в неделю", "Базовые навыки"})
+	tariffFeatures3, _ := json.Marshal([]string{"3 тренировки в неделю", "Интенсивная подготовка"})
+	tariffFeatures4, _ := json.Marshal([]string{"4+ тренировки в неделю", "Профессиональный уровень"})
+
+	defaultTariffs := []models.Tariff{
+		{
+			Title:       "Active",
+			Description: "Для тех, кто хочет получать удовольствие от катания",
+			Features:    string(tariffFeatures1),
+			Price:       "6000 р/мес.",
+			IsActive:    true,
+			Order:       1,
+		},
+		{
+			Title:       "Sport",
+			Description: "Для тех, кто хочет развивать навыки",
+			Features:    string(tariffFeatures2),
+			Price:       "10000 р/мес.",
+			IsActive:    true,
+			Order:       2,
+		},
+		{
+			Title:       "Pro",
+			Description: "Для серьезных спортсменов",
+			Features:    string(tariffFeatures3),
+			Price:       "14000 р/мес.",
+			IsActive:    true,
+			Order:       3,
+		},
+		{
+			Title:       "Champion",
+			Description: "Максимальная подготовка для соревнований",
+			Features:    string(tariffFeatures4),
+			Price:       "18000 р/мес.",
+			IsActive:    true,
+			Order:       4,
+		},
+	}
+
+	for _, tariff := range defaultTariffs {
+		var count int64
+		database.DB.Model(&models.Tariff{}).Where("title = ?", tariff.Title).Count(&count)
+		if count == 0 {
+			if err := database.DB.Create(&tariff).Error; err != nil {
+				return err
+			}
 		}
 	}
 

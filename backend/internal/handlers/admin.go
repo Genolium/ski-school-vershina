@@ -9,6 +9,127 @@ import (
 	"strconv"
 )
 
+// CRUD для тарифов
+func AdminGetTariffs(c *gin.Context) {
+	var tariffs []models.Tariff
+	if err := database.DB.Order(database.GetOrderClause() + " ASC").Find(&tariffs).Error; err != nil {
+		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to fetch tariffs")
+		return
+	}
+	c.JSON(http.StatusOK, tariffs)
+}
+
+func AdminCreateTariff(c *gin.Context) {
+	var tariff models.Tariff
+	if err := c.ShouldBindJSON(&tariff); err != nil {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
+		return
+	}
+
+	// Проверка длины строк
+	if !ValidateStringLength(tariff.Title, 1, 200) || !ValidateStringLength(tariff.Description, 1, 500) {
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
+		return
+	}
+
+	if err := database.DB.Create(&tariff).Error; err != nil {
+		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to create tariff")
+		return
+	}
+
+	services.InvalidateCache("tariffs")
+	LogAdminAction(c, "CREATE", "tariff", tariff.ID)
+	c.JSON(http.StatusCreated, tariff)
+}
+
+func AdminUpdateTariff(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	var tariff models.Tariff
+	if err := database.DB.First(&tariff, id).Error; err != nil {
+		SafeErrorResponse(c, err, http.StatusNotFound, "Tariff not found")
+		return
+	}
+
+	// Используем отдельную структуру для обновления
+	var updateData struct {
+		Title       *string `json:"title"`
+		Description *string `json:"description"`
+		Features    *string `json:"features"`
+		Price       *string `json:"price"`
+		IsActive    *bool   `json:"is_active"`
+		Order       *int    `json:"order"`
+	}
+
+	if err := c.ShouldBindJSON(&updateData); err != nil {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request data")
+		return
+	}
+
+	// Обновление только переданных полей
+	if updateData.Title != nil {
+		if !ValidateStringLength(*updateData.Title, 1, 200) {
+			SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid title length")
+			return
+		}
+		tariff.Title = *updateData.Title
+	}
+	if updateData.Description != nil {
+		if !ValidateStringLength(*updateData.Description, 1, 500) {
+			SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid description length")
+			return
+		}
+		tariff.Description = *updateData.Description
+	}
+	if updateData.Features != nil {
+		tariff.Features = *updateData.Features
+	}
+	if updateData.Price != nil {
+		tariff.Price = *updateData.Price
+	}
+	if updateData.IsActive != nil {
+		tariff.IsActive = *updateData.IsActive
+	}
+	if updateData.Order != nil {
+		tariff.Order = *updateData.Order
+	}
+
+	// Валидация обязательных полей перед сохранением
+	if !ValidateStringLength(tariff.Title, 1, 200) || !ValidateStringLength(tariff.Description, 1, 500) {
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "Title and description are required")
+		return
+	}
+
+	if err := database.DB.Save(&tariff).Error; err != nil {
+		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to update tariff")
+		return
+	}
+
+	services.InvalidateCache("tariffs")
+	LogAdminAction(c, "UPDATE", "tariff", tariff.ID)
+	c.JSON(http.StatusOK, tariff)
+}
+
+func AdminDeleteTariff(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid ID")
+		return
+	}
+
+	if err := database.DB.Delete(&models.Tariff{}, id).Error; err != nil {
+		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to delete tariff")
+		return
+	}
+	services.InvalidateCache("tariffs")
+	LogAdminAction(c, "DELETE", "tariff", uint(id))
+	c.JSON(http.StatusOK, gin.H{"message": "Tariff deleted"})
+}
+
 // CRUD для расписания
 func AdminGetSchedule(c *gin.Context) {
 	var groups []models.ScheduleGroup
@@ -63,6 +184,7 @@ func AdminUpdateSchedule(c *gin.Context) {
 		Time      *string `json:"time"`
 		Location  *string `json:"location"`
 		Spots     *int    `json:"spots"`
+		Price     *string `json:"price"`
 		IsActive  *bool   `json:"is_active"`
 		Order     *int    `json:"order"`
 	}
@@ -98,6 +220,9 @@ func AdminUpdateSchedule(c *gin.Context) {
 	}
 	if updateData.Spots != nil {
 		group.Spots = *updateData.Spots
+	}
+	if updateData.Price != nil {
+		group.Price = *updateData.Price
 	}
 	if updateData.IsActive != nil {
 		group.IsActive = *updateData.IsActive

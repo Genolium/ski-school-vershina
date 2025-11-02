@@ -62,7 +62,8 @@ const AdminApplications = () => {
       const matchesSearch = 
         app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         app.phone.includes(searchQuery) ||
-        app.age.toLowerCase().includes(searchQuery.toLowerCase());
+        (app.age && app.age.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (app.tariff && app.tariff.toLowerCase().includes(searchQuery.toLowerCase()));
       return matchesStatus && matchesSearch;
     });
   }, [applications, filterStatus, searchQuery]);
@@ -101,22 +102,22 @@ const AdminApplications = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Загрузка...</div>;
+    return <div className="text-center py-8 text-sm sm:text-base">Загрузка...</div>;
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4 items-center">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
         <div className="flex-1">
           <Input
-            placeholder="Поиск по имени, телефону или возрасту..."
+            placeholder="Поиск по имени, телефону, тарифу..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-md"
+            className="max-w-full text-sm sm:text-base"
           />
         </div>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full sm:w-[200px] text-sm sm:text-base">
             <SelectValue placeholder="Фильтр по статусу" />
           </SelectTrigger>
           <SelectContent>
@@ -127,43 +128,44 @@ const AdminApplications = () => {
             <SelectItem value="cancelled">Отменены</SelectItem>
           </SelectContent>
         </Select>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
           Показано: {filteredApplications.length} из {applications.length}
         </div>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>Имя</TableHead>
-            <TableHead>Телефон</TableHead>
-            <TableHead>Возраст</TableHead>
-            <TableHead>Статус</TableHead>
-            <TableHead>Дата</TableHead>
-            <TableHead>Действия</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredApplications.length === 0 ? (
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                Заявки не найдены
-              </TableCell>
+              <TableHead className="text-xs sm:text-sm">ID</TableHead>
+              <TableHead className="text-xs sm:text-sm">Имя</TableHead>
+              <TableHead className="hidden sm:table-cell text-xs sm:text-sm">Телефон</TableHead>
+              <TableHead className="text-xs sm:text-sm">Тариф</TableHead>
+              <TableHead className="text-xs sm:text-sm">Статус</TableHead>
+              <TableHead className="hidden md:table-cell text-xs sm:text-sm">Дата</TableHead>
+              <TableHead className="text-xs sm:text-sm">Действия</TableHead>
             </TableRow>
-          ) : (
-            filteredApplications.map((app) => (
+          </TableHeader>
+          <TableBody>
+            {filteredApplications.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-xs sm:text-sm">
+                  Заявки не найдены
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredApplications.map((app) => (
             <TableRow key={app.id}>
-              <TableCell>{app.id}</TableCell>
-              <TableCell>{app.name}</TableCell>
-              <TableCell>{app.phone}</TableCell>
-              <TableCell>{app.age}</TableCell>
+              <TableCell className="text-xs sm:text-sm">{app.id}</TableCell>
+              <TableCell className="text-xs sm:text-sm font-medium">{app.name}</TableCell>
+              <TableCell className="hidden sm:table-cell text-xs sm:text-sm">{app.phone}</TableCell>
+              <TableCell className="text-xs sm:text-sm">{app.tariff || app.age || "-"}</TableCell>
               <TableCell>
                 <Select
                   value={app.status}
                   onValueChange={(value) => handleStatusChange(app.id, value)}
                 >
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[180px] text-xs sm:text-sm">
                     <SelectValue>{getStatusLabel(app.status)}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -174,28 +176,28 @@ const AdminApplications = () => {
                   </SelectContent>
                 </Select>
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden md:table-cell text-xs sm:text-sm">
                 {new Date(app.created_at).toLocaleDateString()}
               </TableCell>
               <TableCell>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
+                    <Button variant="destructive" size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
                       Удалить
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
+                  <AlertDialogContent className="max-w-[95vw] sm:max-w-md">
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Удалить заявку?</AlertDialogTitle>
-                      <AlertDialogDescription>
+                      <AlertDialogTitle className="text-sm sm:text-base">Удалить заявку?</AlertDialogTitle>
+                      <AlertDialogDescription className="text-xs sm:text-sm">
                         Это действие нельзя отменить. Заявка будет удалена навсегда.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Отмена</AlertDialogCancel>
+                    <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                      <AlertDialogCancel className="text-xs sm:text-sm w-full sm:w-auto">Отмена</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={() => handleDelete(app.id)}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs sm:text-sm w-full sm:w-auto"
                       >
                         Удалить
                       </AlertDialogAction>
@@ -204,10 +206,11 @@ const AdminApplications = () => {
                 </AlertDialog>
               </TableCell>
             </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+          ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };

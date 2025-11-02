@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Clock, Users, ArrowRight } from "lucide-react";
 import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
@@ -70,7 +71,38 @@ const Schedule = () => {
         </ScrollReveal>
 
             {loading ? (
-              <div className="text-center py-12">Загрузка расписания...</div>
+              <div className="grid md:grid-cols-2 gap-4 md:gap-6 max-w-6xl mx-auto">
+                {[1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="bg-card border-2 border-border rounded-xl p-5 md:p-6"
+                  >
+                    <div className="flex justify-between items-start mb-3 md:mb-4 gap-2">
+                      <Skeleton className="h-6 md:h-8 w-32" />
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </div>
+                    <div className="space-y-2 md:space-y-3">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <Skeleton className="h-4 w-4 md:h-5 md:w-5 rounded" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <Skeleton className="h-4 w-4 md:h-5 md:w-5 rounded" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <Skeleton className="h-4 w-4 md:h-5 md:w-5 rounded" />
+                        <Skeleton className="h-4 w-28" />
+                      </div>
+                      <div className="pt-2 border-t border-border">
+                        <Skeleton className="h-4 w-40 mb-2" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-11 md:h-12 w-full mt-4 md:mt-6 rounded-md" />
+                  </div>
+                ))}
+              </div>
             ) : scheduleData.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">Расписание временно недоступно</div>
             ) : (
@@ -105,6 +137,9 @@ const Schedule = () => {
                       
                       <div className="pt-2 border-t border-border">
                         <p className="text-xs md:text-sm font-medium text-foreground">{item.location}</p>
+                        {item.price && (
+                          <p className="text-xs md:text-sm font-bold text-primary mt-1">{item.price}</p>
+                        )}
                       </div>
                     </div>
 

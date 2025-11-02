@@ -13,6 +13,7 @@ type ScheduleGroup struct {
 	Time      string         `gorm:"not null" json:"time"`
 	Location  string         `gorm:"not null" json:"location"`
 	Spots     int            `gorm:"default:0" json:"spots"`
+	Price     string         `gorm:"" json:"price"`
 	IsActive  bool           `gorm:"default:true" json:"is_active"`
 	Order     int            `gorm:"default:0" json:"order"`
 	CreatedAt time.Time      `json:"created_at"`

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { getMedia, type Media } from "@/lib/api";
 import { resolveAssetUrl } from "@/lib/assets";
 import { logError } from "@/lib/errorHandler";
+import { Skeleton } from "@/components/ui/skeleton";
 import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
 import {
@@ -72,9 +73,26 @@ const Gallery = () => {
 
   if (loading) {
     return (
-      <section id="gallery" className="py-12 md:py-20 bg-background">
-        <div className="container mx-auto px-4 text-center">
-          <div className="text-lg">Загрузка галереи...</div>
+      <section id="gallery" className="py-12 md:py-20 bg-background relative overflow-hidden">
+        <GeometricPatterns type="x-grid" color="primary" size="md" opacity={10} className="top-8 left-4 md:top-12 md:left-8" />
+        <GeometricPatterns type="triangle" color="muted" size="sm" opacity={15} className="bottom-8 right-4 md:bottom-12 md:right-8 rotate-45" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-8 md:mb-12">
+            <Skeleton className="h-10 md:h-14 w-64 mx-auto mb-3 md:mb-4" />
+            <Skeleton className="h-5 w-96 mx-auto" />
+          </div>
+          
+          <div className="flex flex-wrap gap-4 justify-center mb-8">
+            <Skeleton className="h-10 w-[180px]" />
+            <Skeleton className="h-10 w-[180px]" />
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="aspect-square rounded-lg" />
+            ))}
+          </div>
         </div>
       </section>
     );

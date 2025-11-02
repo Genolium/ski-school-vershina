@@ -9,6 +9,17 @@ import (
 	"ski-school-backend/internal/models"
 )
 
+// getTariffOrAge возвращает тариф, если он есть, иначе возраст (для обратной совместимости)
+func getTariffOrAge(application *models.Application) string {
+	if application.Tariff != "" {
+		return application.Tariff
+	}
+	if application.Age != "" {
+		return application.Age
+	}
+	return "-"
+}
+
 // SendTelegramNotification отправляет уведомление в Telegram чат
 func SendTelegramNotification(cfg *config.Config, application *models.Application) {
 	if cfg.TelegramToken == "" || cfg.TelegramChatID == "" {
@@ -20,12 +31,12 @@ func SendTelegramNotification(cfg *config.Config, application *models.Applicatio
 		"🎿 *Новая заявка*\n\n"+
 			"Имя: %s\n"+
 			"Телефон: %s\n"+
-			"Возраст: %s\n"+
+			"Тариф: %s\n"+
 			"Статус: Новая\n\n"+
 			"ID заявки: %d",
 		application.Name,
 		application.Phone,
-		application.Age,
+		getTariffOrAge(application),
 		application.ID,
 	)
 

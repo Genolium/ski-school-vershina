@@ -18,7 +18,8 @@ type Application struct {
 	ID        uint              `gorm:"primaryKey" json:"id"`
 	Name      string            `gorm:"not null" json:"name"`
 	Phone     string            `gorm:"not null" json:"phone"`
-	Age       string            `gorm:"not null" json:"age"`
+	Age       string            `gorm:"" json:"age"`
+	Tariff    string            `gorm:"" json:"tariff"`
 	Status    ApplicationStatus `gorm:"default:pending" json:"status"`
 	Notes     string            `gorm:"type:text" json:"notes"`
 	CreatedAt time.Time         `json:"created_at"`

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getCoaches, type Coach } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 import ScrollReveal from "./ScrollReveal";
 import {
   Carousel,
@@ -46,8 +47,19 @@ const Trainers = () => {
 
   if (loading) {
     return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">Загрузка тренерского состава...</p>
+      <div className="mb-8 md:mb-12">
+        <Skeleton className="h-8 md:h-10 w-80 mx-auto mb-6 md:mb-8" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-card border-2 border-border rounded-xl p-5 md:p-6 h-full flex flex-col">
+              <Skeleton className="aspect-square w-full mb-4 rounded-lg" />
+              <Skeleton className="h-6 md:h-8 w-32 mb-2" />
+              <Skeleton className="h-4 w-24 mb-3" />
+              <Skeleton className="h-4 w-full mb-1" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

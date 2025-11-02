@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { adminLogin } from "@/lib/api";
 import { getAuthToken, setAuthToken, setRefreshToken, removeAuthToken, isTokenExpired } from "@/lib/auth";
 import AdminApplications from "@/components/admin/AdminApplications";
-import AdminSchedule from "@/components/admin/AdminSchedule";
+import AdminTariffs from "@/components/admin/AdminTariffs";
 import AdminLocations from "@/components/admin/AdminLocations";
 import AdminCamps from "@/components/admin/AdminCamps";
 import AdminStats from "@/components/admin/AdminStats";
@@ -91,25 +91,26 @@ const Admin = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Вход в админ-панель</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Вход в админ-панель</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Имя пользователя</Label>
+                <Label htmlFor="username" className="text-sm sm:text-base">Имя пользователя</Label>
                 <Input
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="username"
                   required
+                  className="text-sm sm:text-base"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Пароль</Label>
+                <Label htmlFor="password" className="text-sm sm:text-base">Пароль</Label>
                 <Input
                   id="password"
                   type="password"
@@ -117,10 +118,11 @@ const Admin = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="password"
                   required
+                  className="text-sm sm:text-base"
                 />
               </div>
-              {error && <div className="text-red-500 text-sm">{error}</div>}
-              <Button type="submit" className="w-full">
+              {error && <div className="text-red-500 text-xs sm:text-sm">{error}</div>}
+              <Button type="submit" className="w-full text-sm sm:text-base">
                 Войти
               </Button>
             </form>
@@ -133,37 +135,37 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 py-3 sm:py-4">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
               Админ-панель - Школа Вершина
             </h1>
-            <Button variant="destructive" onClick={handleLogout}>
+            <Button variant="destructive" onClick={handleLogout} className="w-full sm:w-auto">
               Выйти
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
               <Tabs defaultValue="applications" className="space-y-4">
-                 <TabsList className="grid w-full grid-cols-8">
-                   <TabsTrigger value="applications">Заявки</TabsTrigger>
-                   <TabsTrigger value="schedule">Расписание</TabsTrigger>
-                   <TabsTrigger value="locations">Локации</TabsTrigger>
-                   <TabsTrigger value="camps">Сборы</TabsTrigger>
-                   <TabsTrigger value="stats">Статистика</TabsTrigger>
-                   <TabsTrigger value="about">О нас</TabsTrigger>
-                   <TabsTrigger value="trainers">Тренеры</TabsTrigger>
-                   <TabsTrigger value="media">Медиа</TabsTrigger>
+                 <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1 sm:gap-2 h-auto">
+                   <TabsTrigger value="applications" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Заявки</TabsTrigger>
+                   <TabsTrigger value="tariffs" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Тарифы</TabsTrigger>
+                   <TabsTrigger value="locations" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Локации</TabsTrigger>
+                   <TabsTrigger value="camps" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Сборы</TabsTrigger>
+                   <TabsTrigger value="stats" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Статистика</TabsTrigger>
+                   <TabsTrigger value="about" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">О нас</TabsTrigger>
+                   <TabsTrigger value="trainers" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Тренеры</TabsTrigger>
+                   <TabsTrigger value="media" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Медиа</TabsTrigger>
                  </TabsList>
 
           <TabsContent value="applications">
             <AdminApplications />
           </TabsContent>
 
-          <TabsContent value="schedule">
-            <AdminSchedule />
+          <TabsContent value="tariffs">
+            <AdminTariffs />
           </TabsContent>
 
           <TabsContent value="locations">

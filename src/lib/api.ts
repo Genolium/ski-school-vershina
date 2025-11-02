@@ -7,7 +7,8 @@ export interface Application {
   id: number;
   name: string;
   phone: string;
-  age: string;
+  age?: string;
+  tariff?: string;
   status: 'pending' | 'contacted' | 'completed' | 'cancelled';
   created_at: string;
 }
@@ -20,6 +21,17 @@ export interface ScheduleGroup {
   time: string;
   location: string;
   spots: number;
+  price?: string;
+  is_active: boolean;
+  order: number;
+}
+
+export interface Tariff {
+  id: number;
+  title: string;
+  description: string;
+  features: string; // JSON array string
+  price: string;
   is_active: boolean;
   order: number;
 }
@@ -93,6 +105,12 @@ export interface Media {
 export async function getSchedule(): Promise<ScheduleGroup[]> {
   const response = await fetch(`${API_URL}/schedule`);
   if (!response.ok) throw new Error('Failed to fetch schedule');
+  return response.json();
+}
+
+export async function getTariffs(): Promise<Tariff[]> {
+  const response = await fetch(`${API_URL}/tariffs`);
+  if (!response.ok) throw new Error('Failed to fetch tariffs');
   return response.json();
 }
 
@@ -201,6 +219,38 @@ export async function deleteApplication(id: number): Promise<void> {
     method: 'DELETE',
   });
   if (!response.ok) throw new Error('Failed to delete application');
+}
+
+// Тарифы
+export async function adminGetTariffs(): Promise<Tariff[]> {
+  const response = await authenticatedFetch(`${ADMIN_API_URL}/tariffs`);
+  if (!response.ok) throw new Error('Failed to fetch tariffs');
+  return response.json();
+}
+
+export async function createTariff(data: Omit<Tariff, 'id'>): Promise<Tariff> {
+  const response = await authenticatedFetch(`${ADMIN_API_URL}/tariffs`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Failed to create tariff');
+  return response.json();
+}
+
+export async function updateTariff(id: number, data: Partial<Tariff>): Promise<Tariff> {
+  const response = await authenticatedFetch(`${ADMIN_API_URL}/tariffs/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error('Failed to update tariff');
+  return response.json();
+}
+
+export async function deleteTariff(id: number): Promise<void> {
+  const response = await authenticatedFetch(`${ADMIN_API_URL}/tariffs/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Failed to delete tariff');
 }
 
 // Расписание

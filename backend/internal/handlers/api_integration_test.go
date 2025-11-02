@@ -49,6 +49,7 @@ func setupTestRouter() *gin.Engine {
 		&models.RefreshToken{},
 		&models.Application{},
 		&models.ScheduleGroup{},
+		&models.Tariff{},
 		&models.Location{},
 		&models.Camp{},
 		&models.Statistic{},
@@ -64,6 +65,7 @@ func setupTestRouter() *gin.Engine {
 	api := r.Group("/api")
 	{
 		api.GET("/schedule", GetSchedule)
+		api.GET("/tariffs", GetTariffs)
 		api.GET("/locations", GetLocations)
 		api.GET("/camps", GetCamps)
 		api.GET("/stats", GetStats)
@@ -86,6 +88,11 @@ func setupTestRouter() *gin.Engine {
 			adminAuth.GET("/applications/:id", GetApplication)
 			adminAuth.PUT("/applications/:id", UpdateApplication)
 			adminAuth.DELETE("/applications/:id", DeleteApplication)
+
+			adminAuth.GET("/tariffs", AdminGetTariffs)
+			adminAuth.POST("/tariffs", AdminCreateTariff)
+			adminAuth.PUT("/tariffs/:id", AdminUpdateTariff)
+			adminAuth.DELETE("/tariffs/:id", AdminDeleteTariff)
 
 			adminAuth.GET("/schedule", AdminGetSchedule)
 			adminAuth.POST("/schedule", AdminCreateSchedule)
@@ -241,8 +248,32 @@ func TestCreateApplication(t *testing.T) {
 
 	t.Run("ValidApplication", func(t *testing.T) {
 		reqBody := CreateApplicationRequest{
-			Name:  "Тестовый клиент",
-			Phone: "+79991234567",
+			Name:   "Тестовый клиент",
+			Phone:  "+79991234567",
+			Tariff: "Active",
+		}
+		jsonData, _ := json.Marshal(reqBody)
+
+		req := httptest.NewRequest("POST", "/api/applications", bytes.NewBuffer(jsonData))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+		var application models.Application
+		err := json.Unmarshal(w.Body.Bytes(), &application)
+		assert.NoError(t, err)
+		assert.Equal(t, reqBody.Name, application.Name)
+		assert.Equal(t, reqBody.Phone, application.Phone)
+		assert.Equal(t, reqBody.Tariff, application.Tariff)
+		assert.Equal(t, models.StatusPending, application.Status)
+	})
+
+	t.Run("ValidApplicationWithAge", func(t *testing.T) {
+		// Тест для обратной совместимости со старыми заявками
+		reqBody := CreateApplicationRequest{
+			Name:  "Тестовый клиент (старая форма)",
+			Phone: "+79991234568",
 			Age:   "25",
 		}
 		jsonData, _ := json.Marshal(reqBody)
@@ -619,6 +650,93 @@ func TestAdminSchedule(t *testing.T) {
 		var deleted models.ScheduleGroup
 		err := database.DB.First(&deleted, 1).Error
 		assert.Error(t, err)
+	})
+}
+
+func TestAdminTariffs(t *testing.T) {
+	router := setupTestRouter()
+	createTestAdmin(t, "admin", "password123")
+	token := loginAdmin(t, router, "admin", "password123")
+
+	t.Run("CreateTariff", func(t *testing.T) {
+		tariff := models.Tariff{
+			Title:       "Active",
+			Description: "Описание тарифа Active",
+			Features:    `["1 тренировка в неделю", "Акцент на удовольствие"]`,
+			Price:        "6000 р/мес.",
+			IsActive:    true,
+			Order:       1,
+		}
+		jsonData, _ := json.Marshal(tariff)
+
+		req := httptest.NewRequest("POST", "/api/admin/tariffs", bytes.NewBuffer(jsonData))
+		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+		var created models.Tariff
+		err := json.Unmarshal(w.Body.Bytes(), &created)
+		assert.NoError(t, err)
+		assert.Equal(t, tariff.Title, created.Title)
+		assert.Equal(t, tariff.Price, created.Price)
+	})
+
+	t.Run("GetTariffs", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/admin/tariffs", nil)
+		req.Header.Set("Authorization", "Bearer "+token)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var tariffs []models.Tariff
+		err := json.Unmarshal(w.Body.Bytes(), &tariffs)
+		assert.NoError(t, err)
+		assert.GreaterOrEqual(t, len(tariffs), 1)
+	})
+
+	t.Run("UpdateTariff", func(t *testing.T) {
+		update := models.Tariff{
+			Title:       "Active обновленный",
+			Description: "Обновленное описание",
+			Price:       "7000 р/мес.",
+		}
+		jsonData, _ := json.Marshal(update)
+
+		req := httptest.NewRequest("PUT", "/api/admin/tariffs/1", bytes.NewBuffer(jsonData))
+		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var updated models.Tariff
+		err := json.Unmarshal(w.Body.Bytes(), &updated)
+		assert.NoError(t, err)
+		assert.Equal(t, "Active обновленный", updated.Title)
+		assert.Equal(t, "7000 р/мес.", updated.Price)
+	})
+
+	t.Run("DeleteTariff", func(t *testing.T) {
+		req := httptest.NewRequest("DELETE", "/api/admin/tariffs/1", nil)
+		req.Header.Set("Authorization", "Bearer "+token)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var deleted models.Tariff
+		err := database.DB.First(&deleted, 1).Error
+		assert.Error(t, err)
+	})
+
+	t.Run("UnauthorizedAccess", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/admin/tariffs", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
 }
 

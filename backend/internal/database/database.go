@@ -43,6 +43,7 @@ func InitDB(cfgParam *config.Config) error {
 		&models.User{},
 		&models.RefreshToken{},
 		&models.Application{},
+		&models.Tariff{},
 		&models.ScheduleGroup{},
 		&models.Location{},
 		&models.Camp{},

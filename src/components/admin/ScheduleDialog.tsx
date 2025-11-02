@@ -96,6 +96,15 @@ export const ScheduleDialog = ({ open, onOpenChange, editingItem, onSubmit }: Sc
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
+              <Label htmlFor="price">Стоимость</Label>
+              <Input
+                id="price"
+                name="price"
+                defaultValue={editingItem?.price || ""}
+                placeholder="6000 р/мес."
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="order">Порядок</Label>
               <Input
                 id="order"

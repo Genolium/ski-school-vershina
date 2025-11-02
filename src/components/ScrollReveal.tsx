@@ -45,6 +45,8 @@ const ScrollReveal = ({
     }
   };
 
+  const hasFullHeight = className?.includes("h-full");
+  
   return (
     <div
       ref={ref}
@@ -60,7 +62,10 @@ const ScrollReveal = ({
     >
       <div
         data-visible={isVisible.toString()}
-        className="backdrop-blur-transition"
+        className={cn(
+          "backdrop-blur-transition",
+          hasFullHeight && "h-full flex flex-col"
+        )}
         style={{
           "--backdrop-blur-delay": `${delay}ms`,
         } as React.CSSProperties & { "--backdrop-blur-delay"?: string }}

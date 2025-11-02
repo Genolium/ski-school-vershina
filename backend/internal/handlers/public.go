@@ -9,6 +9,23 @@ import (
 	"time"
 )
 
+func GetTariffs(c *gin.Context) {
+	cacheKey := "tariffs"
+	if cached, found := services.GetCached(cacheKey); found {
+		c.JSON(http.StatusOK, cached)
+		return
+	}
+
+	var tariffs []models.Tariff
+	if err := database.DB.Where("is_active = ?", true).Order(database.GetOrderClause() + " ASC").Find(&tariffs).Error; err != nil {
+		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to fetch tariffs")
+		return
+	}
+
+	services.SetCached(cacheKey, tariffs, 10*time.Minute)
+	c.JSON(http.StatusOK, tariffs)
+}
+
 func GetSchedule(c *gin.Context) {
 	cacheKey := "schedule"
 	if cached, found := services.GetCached(cacheKey); found {
@@ -112,9 +129,10 @@ func GetCoaches(c *gin.Context) {
 }
 
 type CreateApplicationRequest struct {
-	Name  string `json:"name" binding:"required"`
-	Phone string `json:"phone" binding:"required"`
-	Age   string `json:"age" binding:"required"`
+	Name   string `json:"name" binding:"required"`
+	Phone  string `json:"phone" binding:"required"`
+	Age    string `json:"age"`
+	Tariff string `json:"tariff"`
 }
 
 func CreateApplication(c *gin.Context) {
@@ -125,7 +143,7 @@ func CreateApplication(c *gin.Context) {
 	}
 
 	// Проверка длины строк
-	if !ValidateStringLength(req.Name, 1, 200) || !ValidateStringLength(req.Phone, 1, 50) || !ValidateStringLength(req.Age, 1, 50) {
+	if !ValidateStringLength(req.Name, 1, 200) || !ValidateStringLength(req.Phone, 1, 50) {
 		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
 		return
 	}
@@ -134,6 +152,7 @@ func CreateApplication(c *gin.Context) {
 		Name:   req.Name,
 		Phone:  req.Phone,
 		Age:    req.Age,
+		Tariff: req.Tariff,
 		Status: models.StatusPending,
 	}
 

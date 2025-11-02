@@ -88,6 +88,7 @@ const AdminSchedule = () => {
       time: formData.get("time") as string,
       location: formData.get("location") as string,
       spots: parseInt(formData.get("spots") as string),
+      price: formData.get("price") as string || undefined,
       is_active: formData.get("is_active") === "on",
       order: parseInt(formData.get("order") as string) || 0,
     };
@@ -160,6 +161,7 @@ const AdminSchedule = () => {
             <TableHead>Время</TableHead>
             <TableHead>Локация</TableHead>
             <TableHead>Места</TableHead>
+            <TableHead>Стоимость</TableHead>
             <TableHead>Активна</TableHead>
             <TableHead>Действия</TableHead>
           </TableRow>
@@ -173,6 +175,7 @@ const AdminSchedule = () => {
               <TableCell>{item.time}</TableCell>
               <TableCell>{item.location}</TableCell>
               <TableCell>{item.spots}</TableCell>
+              <TableCell>{item.price || "-"}</TableCell>
               <TableCell>{item.is_active ? "Да" : "Нет"}</TableCell>
               <TableCell>
                 <div className="flex gap-2">

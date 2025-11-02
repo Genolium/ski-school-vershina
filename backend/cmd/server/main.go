@@ -66,6 +66,7 @@ func main() {
 	// Публичные API роуты
 	api := r.Group("/api")
 	{
+		api.GET("/tariffs", handlers.GetTariffs)
 		api.GET("/schedule", handlers.GetSchedule)
 		api.GET("/locations", handlers.GetLocations)
 		api.GET("/camps", handlers.GetCamps)
@@ -96,6 +97,12 @@ func main() {
 			adminAuth.GET("/applications/:id", handlers.GetApplication)
 			adminAuth.PUT("/applications/:id", handlers.UpdateApplication)
 			adminAuth.DELETE("/applications/:id", handlers.DeleteApplication)
+
+			// Тарифы
+			adminAuth.GET("/tariffs", handlers.AdminGetTariffs)
+			adminAuth.POST("/tariffs", handlers.AdminCreateTariff)
+			adminAuth.PUT("/tariffs/:id", handlers.AdminUpdateTariff)
+			adminAuth.DELETE("/tariffs/:id", handlers.AdminDeleteTariff)
 
 			// Расписание
 			adminAuth.GET("/schedule", handlers.AdminGetSchedule)
