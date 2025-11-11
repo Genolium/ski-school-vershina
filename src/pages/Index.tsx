@@ -78,8 +78,8 @@ const Index = () => {
       <Locations />
       <About />
       <Camps />
-      <DeferredSection loader={loadGallery} fallback={<GalleryFallback />} wrapperClassName="contents" />
-      <DeferredSection loader={loadContactForm} fallback={<ContactFormFallback />} wrapperClassName="contents" />
+      <DeferredSection loader={loadGallery} fallback={<GalleryFallback />} />
+      <DeferredSection loader={loadContactForm} fallback={<ContactFormFallback />} />
       </div>
       
       {/* Footer */}
