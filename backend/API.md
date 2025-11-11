@@ -2,7 +2,7 @@
 
 ## Базовый URL
 
-- Production: `https://www.ski-school-vershina.ru/api`
+- Production: `http://vershinaski.ru/api`
 - Development: `http://localhost:8080/api`
 
 ## Аутентификация

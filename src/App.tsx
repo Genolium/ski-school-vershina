@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
@@ -12,18 +12,36 @@ const NotFoundPage = lazy(() => import("./pages/NotFound"));
 const METRIKA_ID = import.meta.env.VITE_YANDEX_METRIKA_ID ?? "105075135";
 
 const App = () => {
+  const [isClientReady, setIsClientReady] = useState(false);
+
   useEffect(() => {
     if (!METRIKA_ID) {
       return;
     }
 
     initYandexMetrika(METRIKA_ID);
+
+    const idleHandle = window.requestIdleCallback
+      ? window.requestIdleCallback(() => setIsClientReady(true), { timeout: 1500 })
+      : window.setTimeout(() => setIsClientReady(true), 500);
+
+    return () => {
+      if (window.requestIdleCallback && typeof idleHandle === "number") {
+        window.cancelIdleCallback(idleHandle);
+      } else {
+        window.clearTimeout(idleHandle as number);
+      }
+    };
   }, []);
 
   return (
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
+      {isClientReady && (
+        <>
+          <Toaster />
+          <Sonner />
+        </>
+      )}
       <BrowserRouter>
         <Suspense
           fallback={

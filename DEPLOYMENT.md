@@ -1,7 +1,7 @@
 # Руководство по деплою
 
 ## Производственный домен
-**https://www.ski-school-vershina.ru/**
+**http://vershinaski.ru/**
 
 ## Требования перед деплоем
 
@@ -9,7 +9,7 @@
 Получите SSL сертификаты (Let's Encrypt рекомендован):
 ```bash
 # Используя certbot
-certbot certonly --standalone -d www.ski-school-vershina.ru -d ski-school-vershina.ru
+certbot certonly --standalone -d vershinaski.ru
 ```
 
 ### 2. Переменные окружения для продакшена
@@ -20,7 +20,7 @@ certbot certonly --standalone -d www.ski-school-vershina.ru -d ski-school-vershi
 # Backend
 JWT_SECRET=<сгенерируйте надежный секретный ключ минимум 32 символа>
 ADMIN_PASSWORD=<создайте надежный пароль администратора минимум 8 символов>
-CORS_ORIGINS=https://www.ski-school-vershina.ru,https://ski-school-vershina.ru
+CORS_ORIGINS=http://vershinaski.ru
 ENVIRONMENT=production
 PORT=8080
 
@@ -89,24 +89,23 @@ sudo systemctl restart nginx
 ## Настройка DNS
 
 Настройте DNS записи для домена:
-- A запись: `www.ski-school-vershina.ru` → IP адрес сервера
-- A запись: `ski-school-vershina.ru` → IP адрес сервера
+- A запись: `vershinaski.ru` → IP адрес сервера
 
 ## Проверка после деплоя
 
 1. Проверьте доступность сайта:
 ```bash
-curl https://www.ski-school-vershina.ru/health
+curl http://vershinaski.ru/health
 ```
 
 2. Проверьте SSL:
 ```bash
-openssl s_client -connect www.ski-school-vershina.ru:443
+openssl s_client -connect vershinaski.ru:443
 ```
 
 3. Проверьте админ-панель:
 ```
-https://www.ski-school-vershina.ru/admin
+http://vershinaski.ru/admin
 ```
 
 ## Безопасность
