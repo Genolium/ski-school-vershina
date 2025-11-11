@@ -1,29 +1,46 @@
+import { useEffect, lazy, Suspense } from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Admin from "./pages/Admin";
+import { initYandexMetrika } from "@/lib/metrika";
 
-const queryClient = new QueryClient();
+const IndexPage = lazy(() => import("./pages/Index"));
+const AdminPage = lazy(() => import("./pages/Admin"));
+const NotFoundPage = lazy(() => import("./pages/NotFound"));
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const METRIKA_ID = import.meta.env.VITE_YANDEX_METRIKA_ID ?? "105075135";
+
+const App = () => {
+  useEffect(() => {
+    if (!METRIKA_ID) {
+      return;
+    }
+
+    initYandexMetrika(METRIKA_ID);
+  }, []);
+
+  return (
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/admin" element={<Admin />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense
+          fallback={
+            <div className="min-h-screen flex items-center justify-center bg-background text-foreground" role="status" aria-live="polite">
+              Загрузка...
+            </div>
+          }
+        >
+          <Routes>
+            <Route path="/" element={<IndexPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
-);
+  );
+};
 
 export default App;

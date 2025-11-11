@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const Admin = () => {
+  const [queryClient] = useState(() => new QueryClient());
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [username, setUsername] = useState("");
@@ -133,69 +135,71 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 py-3 sm:py-4">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
-              Админ-панель - Школа Вершина
-            </h1>
-            <Button variant="destructive" onClick={handleLogout} className="w-full sm:w-auto">
-              Выйти
-            </Button>
+    <QueryClientProvider client={queryClient}>
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 py-3 sm:py-4">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+                Админ-панель - Школа Вершина
+              </h1>
+              <Button variant="destructive" onClick={handleLogout} className="w-full sm:w-auto">
+                Выйти
+              </Button>
+            </div>
           </div>
         </div>
+
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+          <Tabs defaultValue="applications" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1 sm:gap-2 h-auto">
+              <TabsTrigger value="applications" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Заявки</TabsTrigger>
+              <TabsTrigger value="tariffs" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Тарифы</TabsTrigger>
+              <TabsTrigger value="locations" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Локации</TabsTrigger>
+              <TabsTrigger value="camps" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Сборы</TabsTrigger>
+              <TabsTrigger value="stats" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Статистика</TabsTrigger>
+              <TabsTrigger value="about" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">О нас</TabsTrigger>
+              <TabsTrigger value="trainers" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Тренеры</TabsTrigger>
+              <TabsTrigger value="media" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Медиа</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="applications">
+              <AdminApplications />
+            </TabsContent>
+
+            <TabsContent value="tariffs">
+              <AdminTariffs />
+            </TabsContent>
+
+            <TabsContent value="locations">
+              <AdminLocations />
+            </TabsContent>
+
+            <TabsContent value="camps">
+              <AdminCamps />
+            </TabsContent>
+
+            <TabsContent value="stats">
+              <AdminStats />
+            </TabsContent>
+
+            <TabsContent value="about">
+              <AdminAbout />
+            </TabsContent>
+
+            <TabsContent value="trainers">
+              <AdminTrainers />
+            </TabsContent>
+
+            <TabsContent value="media">
+              <AdminMedia />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
+    </QueryClientProvider>
+  );
+};
 
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
-              <Tabs defaultValue="applications" className="space-y-4">
-                 <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1 sm:gap-2 h-auto">
-                   <TabsTrigger value="applications" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Заявки</TabsTrigger>
-                   <TabsTrigger value="tariffs" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Тарифы</TabsTrigger>
-                   <TabsTrigger value="locations" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Локации</TabsTrigger>
-                   <TabsTrigger value="camps" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Сборы</TabsTrigger>
-                   <TabsTrigger value="stats" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Статистика</TabsTrigger>
-                   <TabsTrigger value="about" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">О нас</TabsTrigger>
-                   <TabsTrigger value="trainers" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Тренеры</TabsTrigger>
-                   <TabsTrigger value="media" className="text-xs sm:text-sm px-2 py-1.5 sm:py-2">Медиа</TabsTrigger>
-                 </TabsList>
-
-          <TabsContent value="applications">
-            <AdminApplications />
-          </TabsContent>
-
-          <TabsContent value="tariffs">
-            <AdminTariffs />
-          </TabsContent>
-
-          <TabsContent value="locations">
-            <AdminLocations />
-          </TabsContent>
-
-          <TabsContent value="camps">
-            <AdminCamps />
-          </TabsContent>
-
-          <TabsContent value="stats">
-            <AdminStats />
-          </TabsContent>
-
-                 <TabsContent value="about">
-                   <AdminAbout />
-                 </TabsContent>
-
-                 <TabsContent value="trainers">
-                   <AdminTrainers />
-                 </TabsContent>
-
-                 <TabsContent value="media">
-                   <AdminMedia />
-                 </TabsContent>
-               </Tabs>
-             </div>
-           </div>
-         );
-       };
-
-       export default Admin;
+export default Admin;
 

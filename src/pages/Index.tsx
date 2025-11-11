@@ -4,8 +4,53 @@ import Tariffs from "@/components/Tariffs";
 import Locations from "@/components/Locations";
 import About from "@/components/About";
 import Camps from "@/components/Camps";
-import ContactForm from "@/components/ContactForm";
-import Gallery from "@/components/Gallery";
+import DeferredSection from "@/components/DeferredSection";
+
+const loadGallery = () => import("@/components/Gallery");
+const loadContactForm = () => import("@/components/ContactForm");
+
+const GalleryFallback = () => (
+  <section id="gallery" className="py-12 md:py-20 bg-background">
+    <div className="container mx-auto px-4">
+      <div className="text-center mb-8 md:mb-12">
+        <div className="h-10 md:h-14 w-64 mx-auto mb-4 rounded-lg bg-muted animate-pulse" />
+        <div className="h-5 md:h-6 w-48 md:w-64 mx-auto rounded-lg bg-muted animate-pulse" />
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <div key={index} className="aspect-square rounded-lg bg-muted animate-pulse" />
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+const ContactFormFallback = () => (
+  <section id="contact-form" className="py-12 md:py-20 bg-background">
+    <div className="container mx-auto px-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8 md:mb-12">
+          <div className="h-10 md:h-14 w-72 mx-auto mb-4 rounded-lg bg-muted animate-pulse" />
+          <div className="h-5 md:h-6 w-56 md:w-80 mx-auto rounded-lg bg-muted animate-pulse" />
+        </div>
+        <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+          <div className="bg-card border-2 border-border rounded-xl md:rounded-2xl p-6 md:p-8 space-y-4 animate-pulse">
+            <div className="h-12 rounded bg-muted" />
+            <div className="h-12 rounded bg-muted" />
+            <div className="h-12 rounded bg-muted" />
+            <div className="h-12 rounded bg-muted" />
+          </div>
+          <div className="bg-secondary rounded-xl md:rounded-2xl p-6 md:p-8 space-y-4 animate-pulse">
+            <div className="h-8 rounded bg-muted/60" />
+            <div className="h-6 rounded bg-muted/60" />
+            <div className="h-6 rounded bg-muted/60" />
+            <div className="h-10 rounded bg-muted/60" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+);
 
 const Index = () => {
   return (
@@ -33,8 +78,8 @@ const Index = () => {
       <Locations />
       <About />
       <Camps />
-      <Gallery />
-      <ContactForm />
+      <DeferredSection loader={loadGallery} fallback={<GalleryFallback />} wrapperClassName="contents" />
+      <DeferredSection loader={loadContactForm} fallback={<ContactFormFallback />} wrapperClassName="contents" />
       </div>
       
       {/* Footer */}
