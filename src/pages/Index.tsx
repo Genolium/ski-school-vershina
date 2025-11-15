@@ -89,7 +89,7 @@ const Index = () => {
             © 2025 Школа горнолыжного спорта «Вершина». Все права защищены.
           </p>
           <address className="mt-2 text-ski-white/60 text-sm not-italic">
-            Санкт-Петербург, ул. Брянцева 24
+            Санкт-Петербург
           </address>
         </div>
       </footer>
