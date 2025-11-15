@@ -81,10 +81,12 @@ const scheduleInitialization = (counterId: string | number) => {
     injectScript();
 
     window.ym?.(counterId, "init", {
+      ssr: true,
+      webvisor: true,
       clickmap: true,
-      trackLinks: true,
+      ecommerce: "dataLayer",
       accurateTrackBounce: true,
-      webvisor: false,
+      trackLinks: true,
     });
 
     isInitialized = true;
