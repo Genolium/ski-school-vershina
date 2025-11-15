@@ -15,7 +15,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 5%;
 
-    --primary: 9 70% 48%;
+    --primary: 0 78% 40%;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 0 0% 10%;
@@ -24,7 +24,7 @@
     --muted: 0 0% 92%;
     --muted-foreground: 0 0% 40%;
 
-    --accent: 9 70% 48%;
+    --accent: 0 78% 40%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84.2% 60.2%;
@@ -32,23 +32,23 @@
 
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 9 70% 48%;
+    --ring: 0 78% 40%;
 
     --radius: 0.5rem;
 
     /* Цвета темы школы лыж */
-    --ski-red: 9 70% 48%;
-    --ski-red-dark: 9 70% 38%;
+    --ski-red: 0 78% 40%;
+    --ski-red-dark: 0 78% 32%;
     --ski-black: 0 0% 5%;
     --ski-white: 0 0% 98%;
     --ski-gray: 0 0% 20%;
 
     /* Градиенты */
-    --gradient-hero: linear-gradient(135deg, hsl(9 70% 48%) 0%, hsl(9 70% 38%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(0 78% 40%) 0%, hsl(0 78% 32%) 100%);
     --gradient-dark: linear-gradient(180deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 100%);
     
     /* Тени */
-    --shadow-ski: 0 10px 40px -10px hsl(9 70% 48% / 0.4);
+    --shadow-ski: 0 10px 40px -10px hsl(0 78% 40% / 0.4);
     --shadow-card: 0 4px 20px hsl(0 0% 0% / 0.1);
 
     /* Переходы */
@@ -65,7 +65,7 @@
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 9 70% 48%;
+    --primary: 0 78% 40%;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 0 0% 15%;
@@ -74,7 +74,7 @@
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 60%;
 
-    --accent: 9 70% 48%;
+    --accent: 0 78% 40%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -82,7 +82,7 @@
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 9 70% 48%;
+    --ring: 0 78% 40%;
   }
 }
 
