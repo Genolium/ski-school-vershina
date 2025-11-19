@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"os"
@@ -12,6 +11,8 @@ import (
 	"ski-school-backend/internal/services"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 // ServeUploadedFile обрабатывает запросы на загруженные файлы с поддержкой старого и нового путей
@@ -32,9 +33,13 @@ func ServeUploadedFile(c *gin.Context) {
 
 	// Сначала пробуем новый путь (в volume)
 	newPath := filepath.Join("/app/data/uploads", filename)
+	fmt.Printf("ServeUploadedFile: param=%s, filename=%s, newPath=%s\n", filepathParam, filename, newPath)
+
 	if stat, err := os.Stat(newPath); err == nil && !stat.IsDir() {
 		c.File(newPath)
 		return
+	} else {
+		fmt.Printf("ServeUploadedFile: newPath not found or error: %v\n", err)
 	}
 
 	// Если не найден, пробуем старый путь (для обратной совместимости)
@@ -45,6 +50,7 @@ func ServeUploadedFile(c *gin.Context) {
 	}
 
 	// Если файл не найден ни в одном месте
+	fmt.Printf("ServeUploadedFile: file not found in newPath or oldPath\n")
 	c.Status(http.StatusNotFound)
 }
 
@@ -168,7 +174,7 @@ func AdminUpdateCoach(c *gin.Context) {
 		Photo       string `json:"photo"`
 		Order       int    `json:"order"`
 		// Явно игнорируем ID из JSON, если он придет
-		ID          uint   `json:"id" binding:"-"`
+		ID uint `json:"id" binding:"-"`
 	}
 
 	if err := c.ShouldBindJSON(&updateData); err != nil {

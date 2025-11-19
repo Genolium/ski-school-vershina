@@ -48,13 +48,11 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        ski: {
-          red: "hsl(var(--ski-red))",
-          "red-dark": "hsl(var(--ski-red-dark))",
-          black: "hsl(var(--ski-black))",
-          white: "hsl(var(--ski-white))",
-          gray: "hsl(var(--ski-gray))",
-        },
+        "ski-white": "hsl(var(--ski-white))",
+        "ski-black": "hsl(var(--ski-black))",
+        "ski-red": "hsl(var(--ski-red))",
+        "ski-red-dark": "hsl(var(--ski-red-dark))",
+        "ski-gray": "hsl(var(--ski-gray))",
         sidebar: {
           DEFAULT: 'hsl(var(--sidebar-background))',
           foreground: 'hsl(var(--sidebar-foreground))',
@@ -65,6 +63,20 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))'
         }
+      },
+      fontFamily: {
+        sans: ["'Jost'", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "'Roboto'", "'Oxygen'", "'Ubuntu'", "'Cantarell'", "sans-serif"],
+      },
+      backgroundImage: {
+        "gradient-hero": "var(--gradient-hero)",
+        "gradient-dark": "var(--gradient-dark)",
+      },
+      boxShadow: {
+        ski: "var(--shadow-ski)",
+        card: "var(--shadow-card)",
+      },
+      transitionTimingFunction: {
+        smooth: "var(--transition-smooth)",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -95,5 +107,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindAnimate],
 } satisfies Config;

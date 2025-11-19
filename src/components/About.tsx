@@ -56,7 +56,7 @@ const About = () => {
         <GeometricPatterns type="chevrons-left" color="muted" size="md" opacity={20} className="top-1/2 left-4 md:left-8" />
         <GeometricPatterns type="chevrons-right" color="muted" size="md" opacity={20} className="top-1/2 right-4 md:right-8" />
       </div>
-      
+
       <div className="container mx-auto px-4 relative z-10">
         <ScrollReveal>
           <div className="text-center mb-8 md:mb-12">
@@ -78,20 +78,20 @@ const About = () => {
             { value: "100", label: "довольных родителей", suffix: "%", icon_type: "Target", id: 3, order: 3 },
           ] as Statistic[]).map((stat: Statistic, index: number) => (
             <ScrollReveal key={index} delay={index * 100}>
-            <div
-              className="bg-gradient-hero text-ski-white rounded-lg md:rounded-xl p-4 md:p-6 text-center hover:scale-105 transition-transform duration-300 shadow-ski"
-            >
-              <div className="flex justify-center mb-2 md:mb-3">
-                <div className="scale-75 md:scale-100">
-                  {iconFor(stat.icon_type)}
+              <div
+                className="bg-gradient-hero text-ski-white rounded-lg md:rounded-xl p-4 md:p-6 text-center hover:scale-105 transition-transform duration-300 shadow-ski"
+              >
+                <div className="flex justify-center mb-2 md:mb-3">
+                  <div className="scale-75 md:scale-100">
+                    {iconFor(stat.icon_type)}
+                  </div>
                 </div>
+                <div className="text-2xl md:text-4xl font-bold mb-1">
+                  {stat.value}
+                  <span className="text-lg md:text-2xl">{stat.suffix || ""}</span>
+                </div>
+                <p className="text-xs md:text-sm text-ski-white/90 font-medium">{stat.label}</p>
               </div>
-              <div className="text-2xl md:text-4xl font-bold mb-1">
-                {stat.value}
-                <span className="text-lg md:text-2xl">{stat.suffix || ""}</span>
-              </div>
-              <p className="text-xs md:text-sm text-ski-white/90 font-medium">{stat.label}</p>
-            </div>
             </ScrollReveal>
           ))}
         </div>
@@ -100,82 +100,82 @@ const About = () => {
         <Trainers />
 
         {/* Image Gallery */}
-        <div className="grid md:grid-cols-2 gap-4 md:gap-6 mb-8 md:mb-12">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6 mb-12 md:mb-24">
           <ScrollReveal delay={100}>
-          <div className="relative rounded-lg md:rounded-xl overflow-hidden h-56 md:h-80 group">
-            <img 
-              src={groupImage} 
-              alt="Дети на групповой тренировке по горным лыжам в школе Вершина" 
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              loading="lazy"
-              decoding="async"
-              fetchPriority="low"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-ski-black/95 via-ski-black/50 to-ski-black/20 flex items-end">
-              <p className="p-4 md:p-6 text-ski-white text-base md:text-xl font-bold drop-shadow-2xl shadow-black/50">
-                Профессиональные тренировки
-              </p>
+            <div className="relative rounded-lg md:rounded-xl overflow-hidden h-56 md:h-80 group">
+              <img
+                src={groupImage}
+                alt="Дети на групповой тренировке по горным лыжам в школе Вершина"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-ski-black/95 via-ski-black/50 to-ski-black/20 flex items-end">
+                <p className="p-4 md:p-6 text-ski-white text-base md:text-xl font-bold drop-shadow-2xl shadow-black/50">
+                  Профессиональные тренировки
+                </p>
+              </div>
             </div>
-          </div>
           </ScrollReveal>
 
           <ScrollReveal delay={200}>
-          <div className="relative rounded-lg md:rounded-xl overflow-hidden h-56 md:h-80 group">
-            <img 
-              src={winnersImage} 
-              alt="Победители соревнований по горным лыжам из школы Вершина" 
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              loading="lazy"
-              decoding="async"
-              fetchPriority="low"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-ski-black/95 via-ski-black/50 to-ski-black/20 flex items-end">
-              <p className="p-4 md:p-6 text-ski-white text-base md:text-xl font-bold drop-shadow-2xl shadow-black/50">
-                Наши чемпионы
-              </p>
+            <div className="relative rounded-lg md:rounded-xl overflow-hidden h-56 md:h-80 group">
+              <img
+                src={winnersImage}
+                alt="Победители соревнований по горным лыжам из школы Вершина"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-ski-black/95 via-ski-black/50 to-ski-black/20 flex items-end">
+                <p className="p-4 md:p-6 text-ski-white text-base md:text-xl font-bold drop-shadow-2xl shadow-black/50">
+                  Наши чемпионы
+                </p>
+              </div>
             </div>
-          </div>
           </ScrollReveal>
         </div>
 
         {/* Description */}
         <ScrollReveal delay={300}>
-        <div className="max-w-6xl mx-auto bg-card rounded-xl md:rounded-2xl p-6 md:p-8 border-2 border-border">
-          {/* Описание и параграфы из админки */}
-          <div className="space-y-3 md:space-y-4 text-muted-foreground text-sm md:text-base">
-            {about?.description && (
-              <p>{about.description}</p>
-            )}
-            {parsedParagraphs.length > 0 ? (
-              parsedParagraphs.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))
-            ) : (
-              <>
-                <p>
-                  С 2001 года мы обучаем детей горнолыжному спорту по современной австрийской методике.
-                </p>
-                <p>
-                  Наши тренеры — мастера спорта и опытные педагоги, которые помогают раскрыть потенциал.
-                </p>
-              </>
-            )}
-            <div className="grid md:grid-cols-3 gap-3 md:gap-4 pt-3 md:pt-4">
-              <div className="bg-primary/10 rounded-lg p-3 md:p-4">
-                <p className="font-bold text-foreground mb-1 text-sm md:text-base">Безопасность</p>
-                <p className="text-xs md:text-sm">Современное оборудование и контроль тренеров</p>
-              </div>
-              <div className="bg-primary/10 rounded-lg p-3 md:p-4">
-                <p className="font-bold text-foreground mb-1 text-sm md:text-base">Результат</p>
-                <p className="text-xs md:text-sm">Регулярные соревнования и аттестации</p>
-              </div>
-              <div className="bg-primary/10 rounded-lg p-3 md:p-4">
-                <p className="font-bold text-foreground mb-1 text-sm md:text-base">Команда</p>
-                <p className="text-xs md:text-sm">Дружный коллектив единомышленников</p>
+          <div className="max-w-6xl mx-auto bg-card rounded-xl md:rounded-2xl p-6 md:p-8 border-2 border-border">
+            {/* Описание и параграфы из админки */}
+            <div className="space-y-3 md:space-y-4 text-muted-foreground text-sm md:text-base">
+              {about?.description && (
+                <p>{about.description}</p>
+              )}
+              {parsedParagraphs.length > 0 ? (
+                parsedParagraphs.map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))
+              ) : (
+                <>
+                  <p>
+                    С 2001 года мы обучаем детей горнолыжному спорту по современной австрийской методике.
+                  </p>
+                  <p>
+                    Наши тренеры — мастера спорта и опытные педагоги, которые помогают раскрыть потенциал.
+                  </p>
+                </>
+              )}
+              <div className="grid md:grid-cols-3 gap-3 md:gap-4 pt-3 md:pt-4">
+                <div className="bg-primary/10 rounded-lg p-3 md:p-4">
+                  <p className="font-bold text-foreground mb-1 text-sm md:text-base">Безопасность</p>
+                  <p className="text-xs md:text-sm">Современное оборудование и контроль тренеров</p>
+                </div>
+                <div className="bg-primary/10 rounded-lg p-3 md:p-4">
+                  <p className="font-bold text-foreground mb-1 text-sm md:text-base">Результат</p>
+                  <p className="text-xs md:text-sm">Регулярные соревнования и аттестации</p>
+                </div>
+                <div className="bg-primary/10 rounded-lg p-3 md:p-4">
+                  <p className="font-bold text-foreground mb-1 text-sm md:text-base">Команда</p>
+                  <p className="text-xs md:text-sm">Дружный коллектив единомышленников</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
         </ScrollReveal>
       </div>
     </section>
