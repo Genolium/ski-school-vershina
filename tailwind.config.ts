@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -54,25 +55,16 @@ export default {
           white: "hsl(var(--ski-white))",
           gray: "hsl(var(--ski-gray))",
         },
-        "ski-white": "hsl(var(--ski-white))",
-        "ski-black": "hsl(var(--ski-black))",
-        "ski-red": "hsl(var(--ski-red))",
-        "ski-red-dark": "hsl(var(--ski-red-dark))",
-        "ski-gray": "hsl(var(--ski-gray))",
-      },
-      fontFamily: {
-        sans: ["'Jost'", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "'Roboto'", "'Oxygen'", "'Ubuntu'", "'Cantarell'", "sans-serif"],
-      },
-      backgroundImage: {
-        "gradient-hero": "var(--gradient-hero)",
-        "gradient-dark": "var(--gradient-dark)",
-      },
-      boxShadow: {
-        ski: "var(--shadow-ski)",
-        card: "var(--shadow-card)",
-      },
-      transitionTimingFunction: {
-        smooth: "var(--transition-smooth)",
+        sidebar: {
+          DEFAULT: 'hsl(var(--sidebar-background))',
+          foreground: 'hsl(var(--sidebar-foreground))',
+          primary: 'hsl(var(--sidebar-primary))',
+          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+          accent: 'hsl(var(--sidebar-accent))',
+          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+          border: 'hsl(var(--sidebar-border))',
+          ring: 'hsl(var(--sidebar-ring))'
+        }
       },
       borderRadius: {
         lg: "var(--radius)",

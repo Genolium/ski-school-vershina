@@ -12,7 +12,7 @@ import (
 func GetTariffs(c *gin.Context) {
 	cacheKey := "tariffs"
 	if cached, found := services.GetCached(cacheKey); found {
-		c.Header("Cache-Control", "public, max-age=600") // 10 минут
+		c.Header("Cache-Control", "no-cache")
 		c.Header("Vary", "Accept-Encoding")
 		c.JSON(http.StatusOK, cached)
 		return
@@ -25,7 +25,7 @@ func GetTariffs(c *gin.Context) {
 	}
 
 	services.SetCached(cacheKey, tariffs, 10*time.Minute)
-	c.Header("Cache-Control", "public, max-age=600") // 10 минут
+	c.Header("Cache-Control", "no-cache")
 	c.Header("Vary", "Accept-Encoding")
 	c.JSON(http.StatusOK, tariffs)
 }
@@ -33,7 +33,7 @@ func GetTariffs(c *gin.Context) {
 func GetSchedule(c *gin.Context) {
 	cacheKey := "schedule"
 	if cached, found := services.GetCached(cacheKey); found {
-		c.Header("Cache-Control", "public, max-age=600") // 10 минут
+		c.Header("Cache-Control", "no-cache")
 		c.Header("Vary", "Accept-Encoding")
 		c.JSON(http.StatusOK, cached)
 		return
@@ -46,7 +46,7 @@ func GetSchedule(c *gin.Context) {
 	}
 
 	services.SetCached(cacheKey, groups, 10*time.Minute)
-	c.Header("Cache-Control", "public, max-age=600") // 10 минут
+	c.Header("Cache-Control", "no-cache")
 	c.Header("Vary", "Accept-Encoding")
 	c.JSON(http.StatusOK, groups)
 }
@@ -54,7 +54,7 @@ func GetSchedule(c *gin.Context) {
 func GetLocations(c *gin.Context) {
 	cacheKey := "locations"
 	if cached, found := services.GetCached(cacheKey); found {
-		c.Header("Cache-Control", "public, max-age=600") // 10 минут
+		c.Header("Cache-Control", "no-cache")
 		c.Header("Vary", "Accept-Encoding")
 		c.JSON(http.StatusOK, cached)
 		return
@@ -67,7 +67,7 @@ func GetLocations(c *gin.Context) {
 	}
 
 	services.SetCached(cacheKey, locations, 10*time.Minute)
-	c.Header("Cache-Control", "public, max-age=600") // 10 минут
+	c.Header("Cache-Control", "no-cache")
 	c.Header("Vary", "Accept-Encoding")
 	c.JSON(http.StatusOK, locations)
 }
@@ -75,7 +75,7 @@ func GetLocations(c *gin.Context) {
 func GetCamps(c *gin.Context) {
 	cacheKey := "camps"
 	if cached, found := services.GetCached(cacheKey); found {
-		c.Header("Cache-Control", "public, max-age=600") // 10 минут
+		c.Header("Cache-Control", "no-cache")
 		c.Header("Vary", "Accept-Encoding")
 		c.JSON(http.StatusOK, cached)
 		return
@@ -88,7 +88,7 @@ func GetCamps(c *gin.Context) {
 	}
 
 	services.SetCached(cacheKey, camps, 10*time.Minute)
-	c.Header("Cache-Control", "public, max-age=600") // 10 минут
+	c.Header("Cache-Control", "no-cache")
 	c.Header("Vary", "Accept-Encoding")
 	c.JSON(http.StatusOK, camps)
 }
@@ -96,7 +96,7 @@ func GetCamps(c *gin.Context) {
 func GetStats(c *gin.Context) {
 	cacheKey := "stats"
 	if cached, found := services.GetCached(cacheKey); found {
-		c.Header("Cache-Control", "public, max-age=600") // 10 минут
+		c.Header("Cache-Control", "no-cache")
 		c.Header("Vary", "Accept-Encoding")
 		c.JSON(http.StatusOK, cached)
 		return
@@ -109,7 +109,7 @@ func GetStats(c *gin.Context) {
 	}
 
 	services.SetCached(cacheKey, stats, 10*time.Minute)
-	c.Header("Cache-Control", "public, max-age=600") // 10 минут
+	c.Header("Cache-Control", "no-cache")
 	c.Header("Vary", "Accept-Encoding")
 	c.JSON(http.StatusOK, stats)
 }
@@ -117,7 +117,7 @@ func GetStats(c *gin.Context) {
 func GetAbout(c *gin.Context) {
 	cacheKey := "about"
 	if cached, found := services.GetCached(cacheKey); found {
-		c.Header("Cache-Control", "public, max-age=600") // 10 минут
+		c.Header("Cache-Control", "no-cache")
 		c.Header("Vary", "Accept-Encoding")
 		c.JSON(http.StatusOK, cached)
 		return
@@ -130,7 +130,7 @@ func GetAbout(c *gin.Context) {
 	}
 
 	services.SetCached(cacheKey, about, 10*time.Minute)
-	c.Header("Cache-Control", "public, max-age=600") // 10 минут
+	c.Header("Cache-Control", "no-cache")
 	c.Header("Vary", "Accept-Encoding")
 	c.JSON(http.StatusOK, about)
 }
@@ -138,7 +138,7 @@ func GetAbout(c *gin.Context) {
 func GetCoaches(c *gin.Context) {
 	cacheKey := "coaches"
 	if cached, found := services.GetCached(cacheKey); found {
-		c.Header("Cache-Control", "public, max-age=600") // 10 минут
+		c.Header("Cache-Control", "no-cache")
 		c.Header("Vary", "Accept-Encoding")
 		c.JSON(http.StatusOK, cached)
 		return
@@ -151,7 +151,7 @@ func GetCoaches(c *gin.Context) {
 	}
 
 	services.SetCached(cacheKey, coaches, 10*time.Minute)
-	c.Header("Cache-Control", "public, max-age=600") // 10 минут
+	c.Header("Cache-Control", "no-cache")
 	c.Header("Vary", "Accept-Encoding")
 	c.JSON(http.StatusOK, coaches)
 }

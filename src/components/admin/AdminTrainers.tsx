@@ -176,7 +176,7 @@ const AdminTrainers = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     // Проверка, что форма не отправляется во время загрузки или других операций
     if (isUploading || createMutation.isPending || updateMutation.isPending) {
       return;
@@ -197,9 +197,10 @@ const AdminTrainers = () => {
         const uploadResult = await uploadPhoto(photoFile);
         photoUrl = uploadResult.url;
         setIsUploading(false);
-      } catch (error: any) {
+      } catch (error: unknown) {
         setIsUploading(false);
-        toast.error(error.message || "Ошибка при загрузке фото");
+        const errorMessage = error instanceof Error ? error.message : "Ошибка при загрузке фото";
+        toast.error(errorMessage);
         return;
       }
     }
@@ -254,105 +255,105 @@ const AdminTrainers = () => {
           }
         }}
       >
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingItem ? "Редактировать тренера" : "Добавить тренера"}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4" key={editingItem?.id || "new"}>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Имя</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingItem ? "Редактировать тренера" : "Добавить тренера"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4" key={editingItem?.id || "new"}>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Имя</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="position">Позиция</Label>
+                <Input
+                  id="position"
+                  name="position"
+                  value={formData.position}
+                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Описание</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={4}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="photo">Фото</Label>
+              <Input
+                id="photo"
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+              />
+              {photoPreview && (
+                <div className="mt-2">
+                  <img
+                    src={photoPreview}
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded-lg"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="position">Позиция</Label>
-                  <Input
-                    id="position"
-                    name="position"
-                    value={formData.position}
-                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                    required
+              )}
+              {editingItem?.photo && !photoPreview && (
+                <div className="mt-2">
+                  <img
+                    src={resolveAssetUrl(editingItem.photo)}
+                    alt="Current"
+                    className="w-32 h-32 object-cover rounded-lg"
                   />
                 </div>
-              </div>
+              )}
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Описание</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={4}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="order">Порядок</Label>
+              <Input
+                id="order"
+                name="order"
+                type="number"
+                value={formData.order}
+                onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+              />
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="photo">Фото</Label>
-                <Input
-                  id="photo"
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                />
-                {photoPreview && (
-                  <div className="mt-2">
-                    <img
-                      src={photoPreview}
-                      alt="Preview"
-                      className="w-32 h-32 object-cover rounded-lg"
-                    />
-                  </div>
-                )}
-                {editingItem?.photo && !photoPreview && (
-                  <div className="mt-2">
-                    <img
-                      src={resolveAssetUrl(editingItem.photo)}
-                      alt="Current"
-                      className="w-32 h-32 object-cover rounded-lg"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="order">Порядок</Label>
-                <Input
-                  id="order"
-                  name="order"
-                  type="number"
-                  value={formData.order}
-                  onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
-                />
-              </div>
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                  disabled={isUploading}
-                >
-                  Отмена
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isUploading || createMutation.isPending || updateMutation.isPending || !formData.name.trim() || !formData.position.trim()}
-                >
-                  {isUploading ? "Загрузка фото..." : createMutation.isPending || updateMutation.isPending ? "Сохранение..." : editingItem ? "Сохранить" : "Добавить"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                disabled={isUploading}
+              >
+                Отмена
+              </Button>
+              <Button
+                type="submit"
+                disabled={isUploading || createMutation.isPending || updateMutation.isPending || !formData.name.trim() || !formData.position.trim()}
+              >
+                {isUploading ? "Загрузка фото..." : createMutation.isPending || updateMutation.isPending ? "Сохранение..." : editingItem ? "Сохранить" : "Добавить"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Тренерский состав</h2>

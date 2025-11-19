@@ -1,6 +1,8 @@
 # robots.txt for Школа горнолыжного спорта Вершина
 User-agent: *
 Allow: /
+Allow: /favicon.ico
+Allow: /favicon/
 
 # Sitemap
 Sitemap: http://vershinaski.ru/sitemap.xml

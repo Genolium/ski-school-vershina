@@ -140,7 +140,7 @@ const About = () => {
 
         {/* Description */}
         <ScrollReveal delay={300}>
-        <div className="max-w-4xl mx-auto bg-card rounded-xl md:rounded-2xl p-6 md:p-8 border-2 border-border">
+        <div className="max-w-6xl mx-auto bg-card rounded-xl md:rounded-2xl p-6 md:p-8 border-2 border-border">
           {/* Описание и параграфы из админки */}
           <div className="space-y-3 md:space-y-4 text-muted-foreground text-sm md:text-base">
             {about?.description && (
