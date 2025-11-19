@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"ski-school-backend/internal/database"
@@ -29,11 +30,18 @@ func ServeUploadedFile(c *gin.Context) {
 	}
 
 	// Безопасность: только базовое имя файла (защита от path traversal)
-	filename := filepath.Base(filepathParam)
+	// Декодируем URL, так как могут быть пробелы и спецсимволы
+	decodedPath, err := url.QueryUnescape(filepathParam)
+	if err != nil {
+		fmt.Printf("ServeUploadedFile: failed to decode path: %v\n", err)
+		decodedPath = filepathParam // Fallback to raw path
+	}
+
+	filename := filepath.Base(decodedPath)
 
 	// Сначала пробуем новый путь (в volume)
 	newPath := filepath.Join("/app/data/uploads", filename)
-	fmt.Printf("ServeUploadedFile: param=%s, filename=%s, newPath=%s\n", filepathParam, filename, newPath)
+	fmt.Printf("ServeUploadedFile: param=%s, decoded=%s, filename=%s, newPath=%s\n", filepathParam, decodedPath, filename, newPath)
 
 	if stat, err := os.Stat(newPath); err == nil && !stat.IsDir() {
 		c.File(newPath)
