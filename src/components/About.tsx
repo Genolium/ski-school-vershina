@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Trophy, Users, Award, Target } from "lucide-react";
-import groupImage from "@/assets/photo_2025-10-31 13.20.11.jpeg";
-import winnersImage from "@/assets/photo_2025-10-31 13.20.05.jpeg";
 import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
-import Trainers from "./Trainers";
 import { getAbout, getStats, type AboutContent, type Statistic } from "@/lib/api";
 
 function iconFor(type?: string) {
@@ -96,47 +93,7 @@ const About = () => {
           ))}
         </div>
 
-        {/* Trainers Section */}
-        <Trainers />
 
-        {/* Image Gallery */}
-        <div className="grid md:grid-cols-2 gap-4 md:gap-6 mb-12 md:mb-24">
-          <ScrollReveal delay={100}>
-            <div className="relative rounded-lg md:rounded-xl overflow-hidden h-56 md:h-80 group">
-              <img
-                src={groupImage}
-                alt="Дети на групповой тренировке по горным лыжам в школе Вершина"
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                loading="lazy"
-                decoding="async"
-                fetchPriority="low"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-ski-black/95 via-ski-black/50 to-ski-black/20 flex items-end">
-                <p className="p-4 md:p-6 text-ski-white text-base md:text-xl font-bold drop-shadow-2xl shadow-black/50">
-                  Профессиональные тренировки
-                </p>
-              </div>
-            </div>
-          </ScrollReveal>
-
-          <ScrollReveal delay={200}>
-            <div className="relative rounded-lg md:rounded-xl overflow-hidden h-56 md:h-80 group">
-              <img
-                src={winnersImage}
-                alt="Победители соревнований по горным лыжам из школы Вершина"
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                loading="lazy"
-                decoding="async"
-                fetchPriority="low"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-ski-black/95 via-ski-black/50 to-ski-black/20 flex items-end">
-                <p className="p-4 md:p-6 text-ski-white text-base md:text-xl font-bold drop-shadow-2xl shadow-black/50">
-                  Наши чемпионы
-                </p>
-              </div>
-            </div>
-          </ScrollReveal>
-        </div>
 
         {/* Description */}
         <ScrollReveal delay={300}>

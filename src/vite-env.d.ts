@@ -10,6 +10,14 @@ interface ImportMeta {
   readonly env: ImportMetaEnv
 }
 
-interface Window {
-  ym?: (counterId: string | number, method: string, targetId: string, params?: Record<string, unknown>) => void
+export type YandexMetrikaFn = {
+  (counterId: string | number, method: string, ...args: unknown[]): void;
+  a?: unknown[];
+  l?: number;
+};
+
+declare global {
+  interface Window {
+    ym?: YandexMetrikaFn;
+  }
 }

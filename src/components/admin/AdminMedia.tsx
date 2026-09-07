@@ -65,9 +65,9 @@ const AdminMedia = () => {
   });
   const [isUploading, setIsUploading] = useState(false);
 
-  const { data: media = [], isLoading, error } = useQuery({
+  const { data: media = [], isLoading, error } = useQuery<Media[]>({
     queryKey: ["admin-media"],
-    queryFn: adminGetMedia,
+    queryFn: () => adminGetMedia(),
     retry: 1,
   });
 

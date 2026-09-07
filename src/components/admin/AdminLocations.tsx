@@ -76,7 +76,18 @@ const AdminLocations = () => {
     if (editingItem) {
       updateMutation.mutate({ id: editingItem.id, data });
     } else {
-      createMutation.mutate(data);
+      const newLocation: Omit<Location, "id"> = {
+        title: data.title || "",
+        address: data.address || "",
+        description: data.description || "",
+        features: data.features || JSON.stringify([]),
+        icon_type: data.icon_type || iconType || "MapPin",
+        latitude: data.latitude ?? 0,
+        longitude: data.longitude ?? 0,
+        route_url: data.route_url || "",
+        order: data.order ?? locations.length + 1,
+      };
+      createMutation.mutate(newLocation);
     }
   };
 

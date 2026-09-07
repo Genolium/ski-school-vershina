@@ -1,10 +1,10 @@
 import { ComponentType, ReactNode, Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 
-interface DeferredSectionProps<ComponentProps> {
+interface DeferredSectionProps {
   /**
    * Импортируемый компонент, который нужно загрузить лениво.
    */
-  loader: () => Promise<{ default: ComponentType<ComponentProps> }>;
+  loader: () => Promise<{ default: ComponentType }>;
   /**
    * Заполнитель, отображаемый до момента загрузки основного компонента.
    */
@@ -17,10 +17,6 @@ interface DeferredSectionProps<ComponentProps> {
    * Отступ срабатывания IntersectionObserver, по умолчанию 200px.
    */
   rootMargin?: string;
-  /**
-   * Свойства, передаваемые ленивому компоненту.
-   */
-  componentProps?: ComponentProps;
 }
 
 /**
@@ -31,18 +27,16 @@ interface DeferredSectionProps<ComponentProps> {
  *     fallback: JSX-заполнитель до загрузки.
  *     wrapperClassName: Дополнительные классы для контейнера.
  *     rootMargin: Отступ для IntersectionObserver.
- *     componentProps: Пропсы для ленивого компонента.
  *
  * Returns:
  *     JSX.Element: Обёртка, которая управляет загрузкой и отображением компонента.
  */
-const DeferredSection = <ComponentProps,>({
+const DeferredSection = ({
   loader,
   fallback,
   wrapperClassName,
   rootMargin = "200px",
-  componentProps,
-}: DeferredSectionProps<ComponentProps>) => {
+}: DeferredSectionProps) => {
   const LazyComponent = useMemo(() => lazy(loader), [loader]);
   const [shouldLoad, setShouldLoad] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -77,7 +71,7 @@ const DeferredSection = <ComponentProps,>({
     <div ref={containerRef} className={wrapperClassName} aria-busy={!shouldLoad}>
       {shouldLoad ? (
         <Suspense fallback={fallback}>
-          <LazyComponent {...(componentProps as ComponentProps)} />
+          <LazyComponent />
         </Suspense>
       ) : (
         fallback
@@ -87,5 +81,3 @@ const DeferredSection = <ComponentProps,>({
 };
 
 export default DeferredSection;
-
-

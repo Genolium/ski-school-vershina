@@ -59,9 +59,11 @@ const Navigation = () => {
   }, []);
 
   const navLinks = [
+    { label: "О нас", id: "about" },
+    { label: "Фото", id: "gallery" },
+    { label: "Тренеры", id: "trainers" },
     { label: "Тарифы", id: "tariffs" },
     { label: "Локации", id: "locations" },
-    { label: "О нас", id: "about" },
     { label: "Сборы", id: "camps" },
   ];
 

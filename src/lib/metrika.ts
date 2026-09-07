@@ -1,47 +1,17 @@
 // Скрипт для Яндекс.Метрики (должен быть встроен в HTML)
-type RequestIdleCallbackHandle = number;
-
-interface RequestIdleCallbackDeadline {
-  didTimeout: boolean;
-  timeRemaining: () => number;
-}
-
-interface RequestIdleCallbackOptions {
-  timeout?: number;
-}
-
-type YandexMetrikaFn = ((
-  counterId: string | number,
-  method: string,
-  targetId: string,
-  params?: Record<string, unknown>,
-) => void) & {
-  a?: unknown[];
-  l?: number;
-};
-
-declare global {
-  interface Window {
-    ym?: YandexMetrikaFn;
-    requestIdleCallback?: (
-      callback: (deadline: RequestIdleCallbackDeadline) => void,
-      options?: RequestIdleCallbackOptions,
-    ) => RequestIdleCallbackHandle;
-    cancelIdleCallback?: (handle: RequestIdleCallbackHandle) => void;
-  }
-}
+import type { YandexMetrikaFn } from "@/vite-env";
 
 const METRIKA_SCRIPT_URL = "https://mc.yandex.ru/metrika/tag.js";
 let isInitialized = false;
-let scheduledHandle: RequestIdleCallbackHandle | number | null = null;
+let scheduledHandle: number | null = null;
 
 const ensureStub = () => {
-  const win = window as Window;
-  if (!win.ym) {
-    win.ym = function (...args: unknown[]) {
-      (win.ym!.a = win.ym!.a || []).push(args);
+  if (!window.ym) {
+    const stub = function (...args: unknown[]) {
+      (stub.a = stub.a || []).push(args);
     } as YandexMetrikaFn;
-    win.ym.l = Date.now();
+    stub.l = Date.now();
+    window.ym = stub;
   }
 };
 
@@ -129,10 +99,11 @@ export const initYandexMetrika = (counterId: string | number) => {
  *     goalId (str): Идентификатор цели.
  */
 export const reachGoal = (counterId: string | number, goalId: string) => {
-  if (typeof window === "undefined" || !window.ym) {
+  if (typeof window === "undefined") {
     return;
   }
 
-  window.ym(counterId, "reachGoal", goalId);
+  ensureStub();
+  window.ym?.(counterId, "reachGoal", goalId);
 };
 

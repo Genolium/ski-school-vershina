@@ -44,7 +44,6 @@ import {
   deleteStat,
   type Statistic,
 } from "@/lib/api";
-import { toast } from "sonner";
 
 const AdminStats = () => {
   const queryClient = useQueryClient();

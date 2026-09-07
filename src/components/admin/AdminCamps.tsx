@@ -39,7 +39,6 @@ import {
   deleteCamp,
   type Camp,
 } from "@/lib/api";
-import { toast } from "sonner";
 
 const AdminCamps = () => {
   const queryClient = useQueryClient();

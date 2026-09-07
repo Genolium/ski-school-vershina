@@ -1,276 +1,185 @@
 import { useState, useEffect, useCallback } from "react";
-import { getMedia, type Media } from "@/lib/api";
-import { resolveAssetUrl } from "@/lib/assets";
-import { logError } from "@/lib/errorHandler";
-import { Skeleton } from "@/components/ui/skeleton";
+import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { X } from "lucide-react";
+
+// 12 красочных фото сезона 2026 года из assets
+import photo1 from "@/assets/photo_2026-09-07_14-49-17.jpg";
+import photo2 from "@/assets/photo_2026-09-07_14-49-18.jpg";
+import photo3 from "@/assets/photo_2026-09-07_14-49-18 (2).jpg";
+import photo4 from "@/assets/photo_2026-09-07_14-49-19.jpg";
+import photo5 from "@/assets/photo_2026-09-07_14-49-19 (2).jpg";
+import photo6 from "@/assets/photo_2026-09-07_14-49-20.jpg";
+import photo7 from "@/assets/photo_2026-09-07_14-49-21.jpg";
+import photo8 from "@/assets/photo_2026-09-07_14-49-21 (2).jpg";
+import photo9 from "@/assets/photo_2026-09-07_14-49-22.jpg";
+import photo10 from "@/assets/photo_2026-09-07_14-49-22 (2).jpg";
+import photo11 from "@/assets/photo_2026-09-07_14-49-23.jpg";
+import photo12 from "@/assets/photo_2026-09-07_14-49-24.jpg";
+
+interface GalleryPhoto {
+  id: number;
+  src: string;
+  alt: string;
+}
+
+const defaultPhotos: GalleryPhoto[] = [
+  { id: 1, src: photo1, alt: "Горнолыжная школа Вершина фото 1" },
+  { id: 2, src: photo2, alt: "Горнолыжная школа Вершина фото 2" },
+  { id: 3, src: photo3, alt: "Горнолыжная школа Вершина фото 3" },
+  { id: 4, src: photo4, alt: "Горнолыжная школа Вершина фото 4" },
+  { id: 5, src: photo5, alt: "Горнолыжная школа Вершина фото 5" },
+  { id: 6, src: photo6, alt: "Горнолыжная школа Вершина фото 6" },
+  { id: 7, src: photo7, alt: "Горнолыжная школа Вершина фото 7" },
+  { id: 8, src: photo8, alt: "Горнолыжная школа Вершина фото 8" },
+  { id: 9, src: photo9, alt: "Горнолыжная школа Вершина фото 9" },
+  { id: 10, src: photo10, alt: "Горнолыжная школа Вершина фото 10" },
+  { id: 11, src: photo11, alt: "Горнолыжная школа Вершина фото 11" },
+  { id: 12, src: photo12, alt: "Горнолыжная школа Вершина фото 12" },
+];
 
 const Gallery = () => {
-  const [media, setMedia] = useState<Media[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedType, setSelectedType] = useState<"all" | "photo" | "video">("all");
-  const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  // Клавиатурная навигация по лайтбоксу
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (selectedIndex === null) return;
+      if (e.key === "Escape") {
+        setSelectedIndex(null);
+      } else if (e.key === "ArrowLeft") {
+        setSelectedIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : defaultPhotos.length - 1));
+      } else if (e.key === "ArrowRight") {
+        setSelectedIndex((prev) => (prev !== null && prev < defaultPhotos.length - 1 ? prev + 1 : 0));
+      }
+    },
+    [selectedIndex]
+  );
 
   useEffect(() => {
-    // Задержка для оптимизации критического пути - загружаем после LCP
-    const timer = setTimeout(() => {
-      const params: { category?: string; type?: "photo" | "video" } = {};
-      if (selectedCategory !== "all") {
-        params.category = selectedCategory;
-      }
-      if (selectedType !== "all") {
-        params.type = selectedType;
-      }
-
-      getMedia(Object.keys(params).length > 0 ? params : undefined)
-        .then(setMedia)
-        .catch((error) => {
-          logError(error, "Gallery component");
-          setMedia([]);
-        })
-        .finally(() => setLoading(false));
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [selectedCategory, selectedType]);
-
-  const categories = Array.from(new Set(media.map((m) => m.category))).filter(Boolean);
-
-  const filteredMedia = media.filter((m) => {
-    if (selectedCategory !== "all" && m.category !== selectedCategory) return false;
-    if (selectedType !== "all" && m.media_type !== selectedType) return false;
-    return true;
-  });
-
-  // Закрытие модального окна по ESC
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && selectedMedia) {
-        setSelectedMedia(null);
-      }
-    };
-
-    if (selectedMedia) {
-      document.addEventListener("keydown", handleEscape);
-      // Предотвращаем скролл body при открытой модалке
+    if (selectedIndex !== null) {
+      document.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
     }
-
     return () => {
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [selectedMedia]);
+  }, [selectedIndex, handleKeyDown]);
 
-  const handleCloseModal = useCallback(() => {
-    setSelectedMedia(null);
+  const handlePrev = useCallback((e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setSelectedIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : defaultPhotos.length - 1));
   }, []);
 
-  if (loading) {
-    return (
-      <section id="gallery" className="py-12 md:py-20 bg-background relative overflow-hidden">
-        <GeometricPatterns type="x-grid" color="primary" size="md" opacity={10} className="top-8 left-4 md:top-12 md:left-8" />
-        <GeometricPatterns type="triangle" color="muted" size="sm" opacity={15} className="bottom-8 right-4 md:bottom-12 md:right-8 rotate-45" />
-        
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-8 md:mb-12">
-            <Skeleton className="h-10 md:h-14 w-64 mx-auto mb-3 md:mb-4" />
-            <Skeleton className="h-5 w-96 mx-auto" />
-          </div>
-          
-          <div className="flex flex-wrap gap-4 justify-center mb-8">
-            <Skeleton className="h-10 w-[180px]" />
-            <Skeleton className="h-10 w-[180px]" />
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="aspect-square rounded-lg" />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  if (media.length === 0) {
-    return null;
-  }
+  const handleNext = useCallback((e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setSelectedIndex((prev) => (prev !== null && prev < defaultPhotos.length - 1 ? prev + 1 : 0));
+  }, []);
 
   return (
     <section id="gallery" className="py-12 md:py-20 bg-background relative overflow-hidden">
-      <GeometricPatterns type="x-grid" color="primary" size="md" opacity={10} className="top-8 left-4 md:top-12 md:left-8" />
-      <GeometricPatterns type="triangle" color="muted" size="sm" opacity={15} className="bottom-8 right-4 md:bottom-12 md:right-8 rotate-45" />
-      
+      {/* Geometric Patterns */}
+      <div className="hidden md:block">
+        <GeometricPatterns type="x-grid" color="primary" size="md" opacity={15} className="top-8 left-4 md:top-12 md:left-8" />
+        <GeometricPatterns type="triangle" color="muted" size="sm" opacity={20} className="bottom-8 right-4 md:bottom-12 md:right-8 rotate-45" />
+        <GeometricPatterns type="chevrons-right" color="primary" size="sm" opacity={25} className="top-1/2 right-6" />
+      </div>
+
       <div className="container mx-auto px-4 relative z-10">
         <ScrollReveal>
-          <div className="text-center mb-8 md:mb-12">
+          <div className="text-center mb-8 md:mb-14">
             <h2 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4">
-              <span className="text-primary">Фото</span> и видео
+              <span className="text-primary">Фото</span>
             </h2>
             <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
-              Моменты с тренировок и соревнований
+              Яркие моменты тренировок, соревнований и выездных сборов
             </p>
           </div>
         </ScrollReveal>
 
-        <ScrollReveal delay={100}>
-          <div className="flex flex-wrap gap-4 justify-center mb-8">
-            {categories.length > 0 && (
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Все категории" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Все категории</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+        {/* Сетка фотографий без подписей */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+          {defaultPhotos.map((photo, index) => (
+            <ScrollReveal key={photo.id} delay={Math.min(index * 50, 400)}>
+              <div
+                className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer bg-muted border border-border/60 hover:border-primary/60 transition-all duration-300 hover:shadow-ski hover:scale-[1.02]"
+                onClick={() => setSelectedIndex(index)}
+              >
+                <img
+                  src={photo.src}
+                  alt={photo.alt}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading={index < 4 ? "eager" : "lazy"}
+                  decoding="async"
+                  fetchPriority={index < 4 ? "high" : "low"}
+                />
 
-            <Select
-              value={selectedType}
-              onValueChange={(value: "all" | "photo" | "video") => setSelectedType(value)}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Все типы" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все типы</SelectItem>
-                <SelectItem value="photo">Только фото</SelectItem>
-                <SelectItem value="video">Только видео</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </ScrollReveal>
-
-        {filteredMedia.length === 0 ? (
-          <ScrollReveal delay={200}>
-            <div className="text-center py-12 text-muted-foreground">
-              Нет медиа для отображения
-            </div>
-          </ScrollReveal>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {filteredMedia.map((item, index) => (
-              <ScrollReveal key={item.id} delay={index * 50}>
-                <div
-                  className="relative group cursor-pointer overflow-hidden rounded-lg aspect-square bg-muted"
-                  onClick={() => setSelectedMedia(item)}
-                >
-                  {item.media_type === "photo" ? (
-                    <img
-                      src={resolveAssetUrl(item.file_path)}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      loading="lazy"
-                      decoding="async"
-                      fetchPriority={index < 8 ? "high" : "low"}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-hero relative">
-                      {/* Превью видео, если есть thumbnail */}
-                      {item.file_path && (
-                        <video
-                          src={resolveAssetUrl(item.file_path)}
-                          className="w-full h-full object-cover opacity-50"
-                          muted
-                          playsInline
-                          preload="metadata"
-                        />
-                      )}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-ski-white text-center z-10">
-                          <div className="text-3xl md:text-4xl mb-2 drop-shadow-lg">▶</div>
-                          <div className="text-xs md:text-sm font-medium px-2">{item.title}</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {/* Overlay с информацией - видим на hover и на touch devices */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 active:bg-black/40 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100">
-                    <div className="text-ski-white text-center px-4">
-                      <h3 className="font-bold text-sm md:text-base">{item.title}</h3>
-                      {item.description && (
-                        <p className="text-xs text-ski-white/80 mt-1 line-clamp-2">{item.description}</p>
-                      )}
-                    </div>
+                {/* Легкий полупрозрачный hover-эффект с иконкой увеличения (без подписей) */}
+                <div className="absolute inset-0 bg-ski-black/0 group-hover:bg-ski-black/30 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <div className="p-2.5 rounded-full bg-ski-black/60 text-ski-white backdrop-blur-sm shadow-md transform scale-90 group-hover:scale-100 transition-transform">
+                    <ZoomIn className="w-5 h-5 md:w-6 md:h-6" />
                   </div>
                 </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        )}
+              </div>
+            </ScrollReveal>
+          ))}
+        </div>
       </div>
 
-      {selectedMedia && (
+      {/* Lightbox модальное окно */}
+      {selectedIndex !== null && (
         <div
-          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6"
-          onClick={handleCloseModal}
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 backdrop-blur-sm"
+          onClick={() => setSelectedIndex(null)}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="modal-title"
+          aria-label="Просмотр фотографии"
         >
-          <div 
-            className="max-w-6xl w-full max-h-[95vh] md:max-h-[90vh] flex flex-col items-center" 
+          {/* Кнопка закрытия */}
+          <button
+            onClick={() => setSelectedIndex(null)}
+            className="absolute top-3 right-3 sm:top-5 sm:right-5 z-20 p-2.5 rounded-full bg-ski-black/60 hover:bg-primary text-ski-white transition-colors duration-200"
+            aria-label="Закрыть"
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          {/* Стрелка Назад */}
+          <button
+            onClick={handlePrev}
+            className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-20 p-2.5 sm:p-3 rounded-full bg-ski-black/60 hover:bg-primary text-ski-white transition-colors duration-200"
+            aria-label="Предыдущая фотография"
+          >
+            <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
+          </button>
+
+          {/* Изображение */}
+          <div
+            className="max-w-6xl w-full max-h-[90vh] flex flex-col items-center justify-center select-none"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Кнопка закрытия */}
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 p-2 rounded-full bg-black/50 hover:bg-black/70 text-ski-white transition-colors touch-manipulation"
-              aria-label="Закрыть"
-            >
-              <X className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
+            <img
+              src={defaultPhotos[selectedIndex].src}
+              alt={defaultPhotos[selectedIndex].alt}
+              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl transition-transform duration-300"
+              loading="eager"
+            />
 
-            {/* Контент медиа */}
-            <div className="flex-1 flex items-center justify-center w-full mb-2 sm:mb-4">
-              {selectedMedia.media_type === "photo" ? (
-                <img
-                  src={resolveAssetUrl(selectedMedia.file_path)}
-                  alt={selectedMedia.title}
-                  className="max-w-full max-h-[85vh] sm:max-h-[80vh] md:max-h-[75vh] object-contain rounded-lg shadow-2xl"
-                  loading="eager"
-                  decoding="async"
-                  fetchPriority="high"
-                />
-              ) : (
-                <video
-                  src={resolveAssetUrl(selectedMedia.file_path)}
-                  controls
-                  className="max-w-full max-h-[85vh] sm:max-h-[80vh] md:max-h-[75vh] rounded-lg shadow-2xl w-full"
-                  autoPlay
-                  playsInline
-                />
-              )}
-            </div>
-
-            {/* Информация о медиа */}
-            <div className="text-center text-ski-white px-4 pb-4 sm:pb-6">
-              <h3 id="modal-title" className="text-lg sm:text-xl md:text-2xl font-bold mb-2">
-                {selectedMedia.title}
-              </h3>
-              {selectedMedia.description && (
-                <p className="text-sm sm:text-base text-ski-white/80 max-w-2xl mx-auto">
-                  {selectedMedia.description}
-                </p>
-              )}
+            {/* Индикатор номера фото */}
+            <div className="mt-3 text-sm text-ski-white/70 font-medium tracking-wider">
+              {selectedIndex + 1} / {defaultPhotos.length}
             </div>
           </div>
+
+          {/* Стрелка Вперед */}
+          <button
+            onClick={handleNext}
+            className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-20 p-2.5 sm:p-3 rounded-full bg-ski-black/60 hover:bg-primary text-ski-white transition-colors duration-200"
+            aria-label="Следующая фотография"
+          >
+            <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
+          </button>
         </div>
       )}
     </section>
@@ -278,4 +187,3 @@ const Gallery = () => {
 };
 
 export default Gallery;
-

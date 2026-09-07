@@ -40,8 +40,8 @@ const Schedule = () => {
       "description": `Группа ${item.group} для детей ${item.age_range}`,
       "availabilityStarts": item.time.split(" - ")[0],
       "availabilityEnds": item.time.split(" - ")[1],
-      "validFrom": "2025-01-01",
-      "validThrough": "2025-12-31"
+      "validFrom": `${new Date().getFullYear()}-01-01`,
+      "validThrough": `${new Date().getFullYear()}-12-31`
     }))
   };
 

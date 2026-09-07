@@ -1,8 +1,9 @@
 import Navigation from "@/components/Navigation";
 import Hero from "@/components/Hero";
+import About from "@/components/About";
+import Trainers from "@/components/Trainers";
 import Tariffs from "@/components/Tariffs";
 import Locations from "@/components/Locations";
-import About from "@/components/About";
 import Camps from "@/components/Camps";
 import DeferredSection from "@/components/DeferredSection";
 
@@ -62,7 +63,7 @@ const Index = () => {
       >
         Перейти к основному содержимому
       </a>
-      
+
       {/* Aria live region for dynamic content announcements */}
       <div
         aria-live="polite"
@@ -70,23 +71,31 @@ const Index = () => {
         className="sr-only"
         id="aria-live-region"
       />
-      
+
       <Navigation />
       <div id="main-content" tabIndex={-1}>
-      <Hero />
-      <Tariffs />
-      <Locations />
-      <About />
-      <Camps />
-      <DeferredSection loader={loadGallery} fallback={<GalleryFallback />} />
-      <DeferredSection loader={loadContactForm} fallback={<ContactFormFallback />} />
+        <Hero />
+        {/* 1. О нас */}
+        <About />
+        {/* 2. Фото */}
+        <DeferredSection loader={loadGallery} fallback={<GalleryFallback />} />
+        {/* 3. Наши тренеры */}
+        <Trainers />
+        {/* 4. Тарифы */}
+        <Tariffs />
+        {/* 5. Где тренируемся */}
+        <Locations />
+        {/* 6. Сборы */}
+        <Camps />
+        {/* 7. Запись на пробное */}
+        <DeferredSection loader={loadContactForm} fallback={<ContactFormFallback />} />
       </div>
-      
+
       {/* Footer */}
       <footer className="bg-ski-black text-ski-white py-6 md:py-8">
         <div className="container mx-auto px-4 text-center">
           <p className="text-ski-white/60 text-sm md:text-base">
-            © 2025 Школа горнолыжного спорта «Вершина». Все права защищены.
+            © {new Date().getFullYear()} Школа горнолыжного спорта «Вершина». Все права защищены.
           </p>
           <address className="mt-2 text-ski-white/60 text-sm not-italic">
             Санкт-Петербург

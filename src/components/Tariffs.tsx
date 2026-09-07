@@ -92,7 +92,7 @@ const Tariffs = () => {
         <ScrollReveal>
           <div className="text-center mb-8 md:mb-12">
             <h2 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4">
-              <span className="text-primary">Тарифы</span> на сезон 2025/2026
+              <span className="text-primary">Тарифы</span>
             </h2>
             <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
               Выберите подходящий тариф для вашего ребенка
