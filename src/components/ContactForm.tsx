@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Phone, Mail, MessageSquare, CheckCircle2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
 import { createApplication, getTariffs, type Tariff } from "@/lib/api";
 import { reachGoal } from "@/lib/metrika";
@@ -340,32 +339,29 @@ const ContactForm = () => {
   const isTariffValid = touched.tariff && !errors.tariff && formData.tariff !== "";
 
   return (
-    <section id="contact-form" className="py-12 md:py-20 bg-background relative overflow-hidden">
-      {/* Subtle Geometric Patterns */}
-      <GeometricPatterns type="x-grid" color="muted" size="sm" opacity={15} className="top-8 left-4 md:top-12 md:left-8" />
-      <GeometricPatterns type="chevrons-right" color="muted" size="sm" opacity={15} className="top-8 right-4 md:top-12 md:right-8" />
-      <GeometricPatterns type="triangle" color="primary" size="sm" opacity={20} className="bottom-8 left-8 md:bottom-12 md:left-12 rotate-45" />
-      <GeometricPatterns type="chevrons-left" color="muted" size="sm" opacity={15} className="bottom-8 right-4 md:bottom-12 md:right-8" />
+    <section id="contact-form" className="py-16 md:py-24 bg-background relative overflow-hidden">
+      {/* Soft ambient background glows */}
+      <div className="absolute top-1/2 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
+      <div className="absolute bottom-1/3 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-4xl mx-auto">
-          <ScrollReveal>
-            <div className="text-center mb-8 md:mb-12">
-              <h2 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4">
-                Записаться на <span className="text-primary">пробное занятие</span>
-              </h2>
-              <p className="text-base md:text-xl text-muted-foreground px-4">
-                Оставьте заявку, и мы перезвоним в течение 30 минут
-              </p>
-            </div>
-          </ScrollReveal>
+      <div className="container mx-auto px-4 relative z-10 max-w-5xl">
+        <ScrollReveal>
+          <div className="text-center mb-10 md:mb-14">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 tracking-tight">
+              Записаться на <span className="text-primary">пробное занятие</span>
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground px-4 leading-relaxed max-w-2xl mx-auto">
+              Оставьте заявку, и мы перезвоним в течение 30 минут для подбора группы
+            </p>
+          </div>
+        </ScrollReveal>
 
-          <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-stretch">
-            {/* Form */}
-            <ScrollReveal delay={100} className="h-full">
-              <div className="bg-card border-2 border-border rounded-xl md:rounded-2xl p-6 md:p-8 h-full flex flex-col">
-                <form onSubmit={handleSubmit} className="flex flex-col h-full">
-                  <div className="space-y-5 md:space-y-6 flex-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch">
+          {/* Form */}
+          <ScrollReveal delay={100} className="h-full">
+            <div className="bg-card border-2 border-border rounded-2xl p-6 sm:p-8 md:p-9 h-full flex flex-col shadow-sm">
+              <form onSubmit={handleSubmit} className="flex flex-col h-full">
+                <div className="space-y-5 md:space-y-6 flex-1">
                   <div>
                     <Label htmlFor="name" className="text-sm md:text-base mb-1.5 md:mb-2 block">
                       Имя
@@ -554,7 +550,6 @@ const ContactForm = () => {
             </ScrollReveal>
           </div>
         </div>
-      </div>
     </section>
   );
 };

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { getCoaches, type Coach } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import ScrollReveal from "./ScrollReveal";
-import GeometricPatterns from "./GeometricPatterns";
 import {
   Carousel,
   CarouselContent,
@@ -120,20 +119,18 @@ const Trainers = () => {
   }
 
   return (
-    <section id="trainers" className="py-12 md:py-20 bg-background relative overflow-hidden">
-      {/* Geometric Patterns */}
-      <div className="hidden md:block">
-        <GeometricPatterns type="triangle" color="primary" size="lg" opacity={15} className="top-12 right-8 rotate-45" />
-        <GeometricPatterns type="chevrons-left" color="muted" size="md" opacity={20} className="bottom-12 left-8" />
-      </div>
+    <section id="trainers" className="py-16 md:py-24 bg-background relative overflow-hidden">
+      {/* Soft ambient background glows */}
+      <div className="absolute top-1/2 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
+      <div className="absolute top-1/3 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 max-w-6xl">
         <ScrollReveal>
-          <div className="text-center mb-8 md:mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4">
+          <div className="text-center mb-10 md:mb-14">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 tracking-tight">
               Наши <span className="text-primary">тренеры</span>
             </h2>
-            <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4 leading-relaxed">
               Опытные наставники и мастера спорта, воспитывающие чемпионов
             </p>
           </div>
@@ -149,32 +146,31 @@ const Trainers = () => {
             }}
             className="w-full"
           >
-            <CarouselContent className="-ml-2 md:-ml-4 items-stretch">
+            <CarouselContent className="-ml-3 md:-ml-4 items-stretch">
               {displayCoaches.map((coach) => (
-                <CarouselItem key={coach.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
-                  <div className="bg-card border-2 border-border rounded-xl p-5 md:p-6 hover:border-primary hover:shadow-ski transition-all duration-300 h-full flex flex-col touch-manipulation">
+                <CarouselItem key={coach.id} className="pl-3 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
+                  <div className="bg-card border-2 border-border hover:border-primary/60 rounded-2xl p-5 sm:p-6 hover:shadow-ski transition-all duration-300 h-full flex flex-col touch-manipulation">
                     {coach.photo && (
-                      <div className="mb-4 rounded-lg overflow-hidden aspect-square mx-auto flex-shrink-0 w-full bg-muted">
+                      <div className="mb-4 rounded-xl overflow-hidden aspect-square mx-auto flex-shrink-0 w-full bg-muted shadow-sm">
                         <img
                           src={resolveAssetUrl(coach.photo)}
                           alt={coach.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                           loading="lazy"
                           onError={(e) => {
-                            // Если фото недоступно, скрываем или заменяем
                             (e.target as HTMLImageElement).style.display = "none";
                           }}
                         />
                       </div>
                     )}
-                    <h3 className="text-xl md:text-2xl font-bold mb-2 flex-shrink-0">{coach.name}</h3>
+                    <h3 className="text-xl sm:text-2xl font-bold mb-1.5 flex-shrink-0">{coach.name}</h3>
                     {coach.position && (
-                      <p className="text-primary font-semibold mb-3 text-sm md:text-base flex-shrink-0">
+                      <p className="text-primary font-semibold mb-3 text-xs sm:text-sm flex-shrink-0">
                         {coach.position}
                       </p>
                     )}
                     {coach.description && (
-                      <p className="text-muted-foreground text-sm md:text-base leading-relaxed flex-1">
+                      <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed flex-1">
                         {coach.description}
                       </p>
                     )}
@@ -182,21 +178,21 @@ const Trainers = () => {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="hidden md:flex -left-4 lg:-left-12 h-10 w-10 bg-background border-2 shadow-lg hover:scale-110 transition-transform touch-manipulation" />
-            <CarouselNext className="hidden md:flex -right-4 lg:-right-12 h-10 w-10 bg-background border-2 shadow-lg hover:scale-110 transition-transform touch-manipulation" />
+            <CarouselPrevious className="hidden md:flex -left-4 lg:-left-12 h-11 w-11 bg-background border-2 shadow-lg hover:scale-110 transition-transform touch-manipulation" />
+            <CarouselNext className="hidden md:flex -right-4 lg:-right-12 h-11 w-11 bg-background border-2 shadow-lg hover:scale-110 transition-transform touch-manipulation" />
 
             {/* Индикаторы точек */}
             {count > 1 && (
-              <div className="flex justify-center gap-2 mt-6">
+              <div className="flex justify-center items-center gap-2 mt-8">
                 {Array.from({ length: count }).map((_, index) => (
                   <button
                     key={index}
                     onClick={() => api?.scrollTo(index)}
                     className={cn(
-                      "h-2.5 w-2.5 md:h-2 md:w-2 rounded-full transition-all duration-300 touch-manipulation",
+                      "h-2.5 rounded-full transition-all duration-300 touch-manipulation",
                       current === index + 1
                         ? "bg-primary w-8 md:w-10"
-                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-2.5"
                     )}
                     aria-label={`Перейти к слайду ${index + 1}`}
                   />

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
-import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
 
 // 12 красочных фото сезона 2026 года из assets
@@ -78,21 +77,18 @@ const Gallery = () => {
   }, []);
 
   return (
-    <section id="gallery" className="py-12 md:py-20 bg-background relative overflow-hidden">
-      {/* Geometric Patterns */}
-      <div className="hidden md:block">
-        <GeometricPatterns type="x-grid" color="primary" size="md" opacity={15} className="top-8 left-4 md:top-12 md:left-8" />
-        <GeometricPatterns type="triangle" color="muted" size="sm" opacity={20} className="bottom-8 right-4 md:bottom-12 md:right-8 rotate-45" />
-        <GeometricPatterns type="chevrons-right" color="primary" size="sm" opacity={25} className="top-1/2 right-6" />
-      </div>
+    <section id="gallery" className="py-16 md:py-24 bg-background relative overflow-hidden">
+      {/* Soft ambient background glows */}
+      <div className="absolute top-1/4 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
+      <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 max-w-6xl">
         <ScrollReveal>
-          <div className="text-center mb-8 md:mb-14">
-            <h2 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4">
+          <div className="text-center mb-10 md:mb-14">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 tracking-tight">
               <span className="text-primary">Фото</span>
             </h2>
-            <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4 leading-relaxed">
               Яркие моменты тренировок, соревнований и выездных сборов
             </p>
           </div>

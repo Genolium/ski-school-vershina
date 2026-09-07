@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Check, ArrowRight } from "lucide-react";
-import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
 import { getTariffs, type Tariff } from "@/lib/api";
 import { logError } from "@/lib/errorHandler";
@@ -82,26 +81,25 @@ const Tariffs = () => {
   const displayTariffs = tariffs.length > 0 ? tariffs : fallbackTariffs;
 
   return (
-    <section id="tariffs" className="py-12 md:py-20 bg-background relative overflow-hidden">
-      {/* Geometric Patterns */}
-      <GeometricPatterns type="zigzag" color="primary" size="md" opacity={25} className="top-8 left-1/2 -translate-x-1/2 w-32 md:w-48" />
-      <GeometricPatterns type="triangle" color="muted" size="md" opacity={20} className="top-4 left-4 md:top-8 md:left-8 rotate-45" />
-      <GeometricPatterns type="triangle" color="muted" size="md" opacity={20} className="top-4 right-4 md:top-8 md:right-8 -rotate-45" />
+    <section id="tariffs" className="py-16 md:py-24 bg-background relative overflow-hidden">
+      {/* Soft ambient background glows */}
+      <div className="absolute top-1/3 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
+      <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 max-w-7xl">
         <ScrollReveal>
-          <div className="text-center mb-8 md:mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4">
+          <div className="text-center mb-10 md:mb-14">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 tracking-tight">
               <span className="text-primary">Тарифы</span>
             </h2>
-            <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
-              Выберите подходящий тариф для вашего ребенка
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-4 leading-relaxed">
+              Выберите подходящий тариф для регулярных или индивидуальных занятий
             </p>
           </div>
         </ScrollReveal>
 
         {loading ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="bg-card border-2 border-border rounded-xl md:rounded-2xl p-5 md:p-6 flex flex-col h-full">
                 <Skeleton className="h-8 w-24 mb-2 md:mb-3" />
@@ -126,44 +124,59 @@ const Tariffs = () => {
             Тарифы временно недоступны
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto items-stretch">
-            {displayTariffs.map((tariff, index) => (
-              <ScrollReveal key={tariff.id} delay={index * 100} className="h-full">
-                <div className="bg-card border-2 border-border rounded-xl md:rounded-2xl p-5 md:p-6 hover:border-primary hover:shadow-ski transition-all duration-300 flex flex-col h-full">
-                  <div className="flex-1 flex flex-col">
-                    <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2 md:mb-3">
-                      {tariff.title}
-                    </h3>
-                    <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">
-                      {tariff.description}
-                    </p>
-                    
-                    <ul className="space-y-2 md:space-y-3 mb-6 md:mb-8 flex-1">
-                      {parseFeatures(tariff.features).map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-2 md:gap-3 text-sm md:text-base">
-                          <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                          <span className="text-muted-foreground">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 items-stretch">
+            {displayTariffs.map((tariff, index) => {
+              const isPopular = tariff.title.toLowerCase().includes("standard") || index === 1;
+              return (
+                <ScrollReveal key={tariff.id} delay={index * 80} className="h-full">
+                  <div
+                    className={`bg-card rounded-xl md:rounded-2xl p-5 sm:p-6 md:p-7 transition-all duration-300 flex flex-col h-full relative ${
+                      isPopular
+                        ? "border-2 border-primary shadow-ski md:-translate-y-1"
+                        : "border-2 border-border hover:border-primary/60 hover:shadow-md"
+                    }`}
+                  >
+                    {isPopular && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-sm">
+                        Хит сезона
+                      </div>
+                    )}
 
-                  <div className="border-t border-border pt-4 md:pt-6 mt-auto">
-                    <div className="text-2xl md:text-3xl font-bold text-primary mb-4 md:mb-6 text-center">
-                      {tariff.price}
+                    <div className="flex-1 flex flex-col">
+                      <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
+                        {tariff.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-4 md:mb-6 min-h-[2.5rem] leading-relaxed">
+                        {tariff.description}
+                      </p>
+                      
+                      <ul className="space-y-2.5 md:space-y-3 mb-6 md:mb-8 flex-1">
+                        {parseFeatures(tariff.features).map((feature, idx) => (
+                          <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm">
+                            <Check className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0 mt-0.5" />
+                            <span className="text-foreground/90 leading-snug">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <Button 
-                      variant="cta" 
-                      className="w-full group text-sm md:text-base h-11 md:h-12 touch-manipulation" 
-                      onClick={scrollToForm}
-                    >
-                      Записаться
-                      <ArrowRight className="ml-2 h-3 w-3 md:h-4 md:w-4 group-hover:translate-x-1 transition-transform" />
-                    </Button>
+
+                    <div className="border-t border-border pt-4 md:pt-5 mt-auto">
+                      <div className="text-2xl sm:text-3xl font-bold text-primary mb-3 md:mb-4 text-center tracking-tight">
+                        {tariff.price}
+                      </div>
+                      <Button 
+                        variant={isPopular ? "hero" : "cta"} 
+                        className="w-full group text-sm md:text-base h-11 md:h-12 touch-manipulation" 
+                        onClick={scrollToForm}
+                      >
+                        Записаться
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </ScrollReveal>
-            ))}
+                </ScrollReveal>
+              );
+            })}
           </div>
         )}
       </div>

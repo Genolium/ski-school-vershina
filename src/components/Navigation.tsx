@@ -71,7 +71,7 @@ const Navigation = () => {
     <nav
       aria-label="Основная навигация"
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-ski-black/95 backdrop-blur-md shadow-lg" : "bg-transparent"
+        isScrolled || isMobileMenuOpen ? "bg-ski-black/95 backdrop-blur-md shadow-lg border-b border-ski-white/10" : "bg-transparent"
       }`}
     >
       <div className="container mx-auto px-4">
@@ -79,7 +79,7 @@ const Navigation = () => {
           {/* Logo */}
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="text-xl md:text-2xl font-bold text-primary hover:text-primary/80 transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ski-black rounded-md px-2 py-1"
+            className="text-xl md:text-2xl font-bold text-primary hover:text-primary/80 transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ski-black rounded-md px-2 py-1 tracking-tight"
             aria-label="На главную"
           >
             VERSHINA
@@ -96,7 +96,7 @@ const Navigation = () => {
                 {link.label}
               </button>
             ))}
-            <Button variant="hero" onClick={scrollToForm} className="text-sm lg:text-base">
+            <Button variant="hero" onClick={scrollToForm} className="text-sm lg:text-base h-10 px-5 shadow-sm">
               Записаться
             </Button>
           </div>
@@ -104,7 +104,7 @@ const Navigation = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden text-ski-white p-2.5 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ski-black rounded-md"
+            className="md:hidden text-ski-white p-2.5 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ski-black rounded-md hover:bg-ski-white/10 transition-colors"
             aria-label={isMobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
             aria-expanded={isMobileMenuOpen}
           >
@@ -116,20 +116,20 @@ const Navigation = () => {
         {isMobileMenuOpen && (
           <div 
             ref={menuRef}
-            className="md:hidden bg-ski-black/95 backdrop-blur-md border-t border-ski-white/10 py-4 max-h-[calc(100vh-4rem)] overflow-y-auto"
+            className="md:hidden bg-ski-black/95 backdrop-blur-md border-t border-ski-white/10 py-4 max-h-[calc(100vh-4rem)] overflow-y-auto animate-in fade-in-50 slide-in-from-top-2 duration-200"
           >
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1.5 px-2">
               {navLinks.map((link) => (
                 <button
                   key={link.id}
                   onClick={() => scrollToSection(link.id)}
-                  className="text-ski-white hover:text-primary transition-colors font-medium text-left px-4 py-3 text-base touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ski-black rounded-md"
+                  className="text-ski-white hover:text-primary hover:bg-ski-white/5 active:bg-ski-white/10 transition-colors font-medium text-left px-4 py-3 rounded-lg text-base touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   {link.label}
                 </button>
               ))}
-              <div className="px-4 pt-2 pb-2">
-                <Button variant="hero" className="w-full text-base h-12 touch-manipulation" onClick={scrollToForm}>
+              <div className="pt-3 pb-1">
+                <Button variant="hero" className="w-full text-base h-12 touch-manipulation shadow-md" onClick={scrollToForm}>
                   Записаться
                 </Button>
               </div>

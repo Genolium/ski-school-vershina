@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Clock, Users, ArrowRight } from "lucide-react";
-import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
 import { getSchedule, type ScheduleGroup } from "@/lib/api";
 import { logError } from "@/lib/errorHandler";
@@ -51,14 +50,11 @@ const Schedule = () => {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(scheduleStructuredData) }}
       />
-      {/* Geometric Patterns */}
-      <GeometricPatterns type="zigzag" color="primary" size="md" opacity={25} className="top-8 left-1/2 -translate-x-1/2 w-32 md:w-48" />
-      <GeometricPatterns type="triangle" color="muted" size="md" opacity={20} className="top-4 left-4 md:top-8 md:left-8 rotate-45" />
-      <GeometricPatterns type="triangle" color="muted" size="md" opacity={20} className="top-4 right-4 md:top-8 md:right-8 -rotate-45" />
-      <GeometricPatterns type="triangle" color="primary" size="sm" opacity={25} className="bottom-8 left-8 md:bottom-12 md:left-12 rotate-12" />
-      <GeometricPatterns type="triangle" color="primary" size="sm" opacity={25} className="bottom-8 right-8 md:bottom-12 md:right-12 -rotate-12" />
+      {/* Soft ambient background glows */}
+      <div className="absolute top-1/3 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
+      <div className="absolute bottom-1/3 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 max-w-6xl">
         <ScrollReveal>
           <div className="text-center mb-8 md:mb-12">
             <h2 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4">

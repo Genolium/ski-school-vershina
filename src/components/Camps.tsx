@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Mountain, Calendar, Users, Snowflake, ChevronLeft, ChevronRight } from "lucide-react";
-import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
 import { getCamps, type Camp } from "@/lib/api";
 
@@ -98,21 +97,18 @@ const Camps = () => {
   };
 
   return (
-    <section id="camps" className="py-12 md:py-20 bg-gradient-dark text-ski-white relative overflow-hidden">
-      {/* Geometric Patterns */}
-      <GeometricPatterns type="triangle" color="primary" size="xl" opacity={50} className="top-8 right-8 md:top-12 md:right-12 rotate-12" />
-      <GeometricPatterns type="x-grid" color="primary" size="lg" opacity={45} className="bottom-8 left-8 md:bottom-12 md:left-12" />
-      <GeometricPatterns type="chevrons-left" color="primary" size="md" opacity={40} className="top-1/4 left-4 md:left-8" />
-      <GeometricPatterns type="chevrons-right" color="primary" size="md" opacity={40} className="bottom-1/4 right-4 md:right-8" />
-      <GeometricPatterns type="zigzag" color="primary" size="sm" opacity={35} className="top-16 left-1/2 -translate-x-1/2 w-24 md:w-32" />
+    <section id="camps" className="py-16 md:py-24 bg-gradient-dark text-ski-white relative overflow-hidden">
+      {/* Ambient background glows */}
+      <div className="absolute top-1/4 -left-32 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-32 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
       
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 max-w-6xl">
         <ScrollReveal>
-          <div className="text-center mb-8 md:mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4">
+          <div className="text-center mb-10 md:mb-14">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 tracking-tight">
               Тренировочные <span className="text-primary">сборы</span>
             </h2>
-            <p className="text-base md:text-xl text-ski-white/80 max-w-2xl mx-auto px-4">
+            <p className="text-base sm:text-lg md:text-xl text-ski-white/80 max-w-2xl mx-auto px-4 leading-relaxed">
               Выездные тренировки на лучших горнолыжных курортах
             </p>
           </div>
@@ -264,37 +260,37 @@ const Camps = () => {
                 </div>
               </div>
 
-              {/* Навигационные стрелки */}
+              {/* Навигационные стрелки - скрыты на смартфонах для чистоты свайпа, удобны на десктопе */}
               {camps.length > 1 && (
                 <>
                   <button
                     onClick={goToPrevious}
-                    className="absolute left-2 md:left-0 top-1/2 -translate-y-1/2 md:-translate-x-8 lg:-translate-x-12 z-10 bg-ski-white/10 hover:bg-ski-white/20 backdrop-blur-sm border border-primary/30 rounded-full p-2 md:p-3 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation shadow-lg"
+                    className="hidden md:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 lg:-translate-x-7 z-10 bg-ski-black/70 hover:bg-primary text-ski-white backdrop-blur-md border border-primary/40 rounded-full p-3 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation shadow-xl"
                     aria-label="Предыдущий слайд"
                   >
-                    <ChevronLeft className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                    <ChevronLeft className="h-6 w-6" />
                   </button>
                   <button
                     onClick={goToNext}
-                    className="absolute right-2 md:right-0 top-1/2 -translate-y-1/2 md:translate-x-8 lg:translate-x-12 z-10 bg-ski-white/10 hover:bg-ski-white/20 backdrop-blur-sm border border-primary/30 rounded-full p-2 md:p-3 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation shadow-lg"
+                    className="hidden md:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 lg:translate-x-7 z-10 bg-ski-black/70 hover:bg-primary text-ski-white backdrop-blur-md border border-primary/40 rounded-full p-3 transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation shadow-xl"
                     aria-label="Следующий слайд"
                   >
-                    <ChevronRight className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                    <ChevronRight className="h-6 w-6" />
                   </button>
                 </>
               )}
 
               {/* Индикаторы точек */}
               {camps.length > 1 && (
-                <div className="flex justify-center gap-2 mt-4 md:mt-6">
+                <div className="flex justify-center items-center gap-2.5 mt-6 mb-12 md:mb-16">
                   {camps.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => goToSlide(index)}
                       className={`transition-all duration-300 rounded-full touch-manipulation ${
                         index === currentIndex
-                          ? "bg-primary w-8 h-2 md:w-10 md:h-2.5"
-                          : "bg-ski-white/30 w-2 h-2 md:w-2.5 md:h-2.5 hover:bg-ski-white/50"
+                          ? "bg-primary w-8 md:w-10 h-2.5 shadow-sm"
+                          : "bg-ski-white/30 w-2.5 h-2.5 hover:bg-ski-white/50"
                       }`}
                       aria-label={`Перейти к слайду ${index + 1}`}
                     />
@@ -305,18 +301,18 @@ const Camps = () => {
           )}
         </div>
 
-        {/* Past camps highlights */}
-        <div className="grid md:grid-cols-3 gap-3 md:gap-4 text-center">
+        {/* Достижения и статистика выездных сборов */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4 md:gap-6 text-center max-w-4xl mx-auto">
           {[
             { value: "5", label: "Сборов в прошлом сезоне" },
             { value: "80+", label: "Участников сборов" },
             { value: "98%", label: "Родителей рекомендуют" },
           ].map((item, index) => (
             <ScrollReveal key={index} delay={index * 100}>
-            <div className="bg-ski-white/5 backdrop-blur-sm rounded-lg p-4 md:p-6 border border-ski-white/10">
-              <p className="text-2xl md:text-3xl font-bold text-primary mb-1 md:mb-2">{item.value}</p>
-              <p className="text-xs md:text-sm text-ski-white/80">{item.label}</p>
-            </div>
+              <div className="bg-ski-white/5 hover:bg-ski-white/10 backdrop-blur-sm rounded-xl p-4 sm:p-5 md:p-6 border border-ski-white/10 transition-all duration-300 hover:-translate-y-1 shadow-md">
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-1 md:mb-2">{item.value}</p>
+                <p className="text-xs sm:text-sm text-ski-white/80 font-medium leading-snug">{item.label}</p>
+              </div>
             </ScrollReveal>
           ))}
         </div>

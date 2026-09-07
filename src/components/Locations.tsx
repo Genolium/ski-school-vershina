@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { MapPin, Bike, Mountain as MountainIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import GeometricPatterns from "./GeometricPatterns";
 import ScrollReveal from "./ScrollReveal";
 import { getLocations, type Location } from "@/lib/api";
 import { logError } from "@/lib/errorHandler";
@@ -98,62 +97,68 @@ const Locations = () => {
   };
 
   return (
-    <section id="locations" className="py-12 md:py-20 bg-gradient-dark text-ski-white relative overflow-hidden">
-      {/* Geometric Patterns */}
-      <GeometricPatterns type="chevrons-left" color="primary" size="lg" opacity={40} className="top-8 right-8 md:top-12 md:right-12" />
-      <GeometricPatterns type="chevrons-right" color="white" size="lg" opacity={35} className="bottom-8 left-8 md:bottom-12 md:left-12" />
-      <GeometricPatterns type="x-grid" color="primary" size="md" opacity={30} className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+    <section id="locations" className="py-16 md:py-24 bg-gradient-dark text-ski-white relative overflow-hidden">
+      {/* Ambient soft glow */}
+      <div className="absolute top-1/3 left-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
+      <div className="absolute bottom-1/3 right-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
       
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 max-w-6xl">
         <ScrollReveal>
-          <div className="text-center mb-8 md:mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4">
+          <div className="text-center mb-10 md:mb-14">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 tracking-tight">
               Где мы <span className="text-primary">тренируемся</span>
             </h2>
-            <p className="text-base md:text-xl text-ski-white/80 max-w-2xl mx-auto px-4">
+            <p className="text-base sm:text-lg md:text-xl text-ski-white/80 max-w-2xl mx-auto px-4 leading-relaxed">
               Профессиональные площадки для всесезонных тренировок
             </p>
           </div>
         </ScrollReveal>
 
-        <div className="grid md:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-8 items-stretch">
           {locations.map((location, index) => (
             <ScrollReveal key={location.id} delay={index * 100} className="h-full">
-            <div
-              className="bg-ski-white/5 backdrop-blur-sm border border-ski-white/10 rounded-xl p-5 md:p-6 hover:border-primary hover:bg-ski-white/10 transition-all duration-300 md:hover:scale-105 flex flex-col h-full"
-            >
-              <div className="bg-gradient-hero rounded-lg p-3 md:p-4 w-fit mb-3 md:mb-4 text-ski-white">
-                {iconFor(location.icon_type)}
-              </div>
-              
-              <h3 className="text-xl md:text-2xl font-bold mb-2">{location.title}</h3>
-              <p className="text-primary text-xs md:text-sm font-semibold mb-2 md:mb-3">{location.address}</p>
-              <p className="text-ski-white/80 mb-3 md:mb-4 text-sm md:text-base">{location.description}</p>
-              
-              <ul className="space-y-1.5 md:space-y-2 mb-3 md:mb-4 flex-1">
-                {parseFeatures(location.features).map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-xs md:text-sm">
-                    <div className="h-1.5 w-1.5 bg-primary rounded-full flex-shrink-0" />
-                    <span className="text-ski-white/90">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              <div className="mt-auto">
-                {(location.route_url || (location.latitude && location.longitude && location.latitude !== 0 && location.longitude !== 0)) && (
+              <div
+                className="bg-ski-white/5 backdrop-blur-sm border border-ski-white/10 rounded-2xl p-5 sm:p-6 md:p-7 hover:border-primary/60 hover:bg-ski-white/10 transition-all duration-300 md:hover:-translate-y-1 flex flex-col h-full shadow-lg"
+              >
+                <div className="bg-gradient-hero rounded-xl p-3.5 w-fit mb-4 text-ski-white shadow-sm">
+                  {iconFor(location.icon_type)}
+                </div>
+                
+                <h3 className="text-xl md:text-2xl font-bold mb-1.5">{location.title}</h3>
+                <p className="text-primary text-xs sm:text-sm font-semibold mb-3 flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  <span>{location.address}</span>
+                </p>
+                <p className="text-ski-white/80 mb-4 text-xs sm:text-sm leading-relaxed">{location.description}</p>
+                
+                <ul className="space-y-2 mb-6 flex-1">
+                  {parseFeatures(location.features).map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm">
+                      <div className="h-1.5 w-1.5 bg-primary rounded-full flex-shrink-0 mt-1.5" />
+                      <span className="text-ski-white/90 leading-snug">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                
+                <div className="mt-auto pt-2 border-t border-ski-white/10">
+                  {(location.route_url || (location.latitude && location.longitude && location.latitude !== 0 && location.longitude !== 0)) && (
                     <a 
                       href={getRouteUrl(location)} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="inline-block touch-manipulation"
+                      className="block w-full touch-manipulation"
                     >
-                      <Button variant="outline" size="sm" className="text-xs md:text-sm border-primary/50 text-primary bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary touch-manipulation">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full text-xs sm:text-sm border-primary/50 text-primary bg-transparent hover:bg-primary hover:text-white transition-colors touch-manipulation h-10"
+                      >
                         Как добраться
                       </Button>
                     </a>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
             </ScrollReveal>
           ))}
         </div>
