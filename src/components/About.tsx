@@ -88,63 +88,73 @@ const About = () => {
           ))}
         </div>
 
-        {/* Описание школы и ценности */}
+        {/* Описание школы и ценности (2 колонки с выравниванием по левому краю) */}
         <ScrollReveal delay={250}>
-          <div className="bg-card rounded-2xl p-6 sm:p-8 md:p-10 border border-border shadow-sm">
-            {/* Текстовая история */}
-            <div className="max-w-3xl mx-auto text-center mb-8 md:mb-10">
-              <p className="text-base sm:text-lg md:text-xl text-foreground font-medium leading-relaxed mb-4">
-                {about?.description ||
-                  "«Вершина» — с 2001 года мы дарим детям любовь к горам и спорту, используя лучшие мировые практики — австрийскую методику обучения, признанную эталоном в горнолыжном мире."}
-              </p>
-              {parsedParagraphs.length > 0 ? (
-                <div className="space-y-3 text-sm sm:text-base text-muted-foreground leading-relaxed">
-                  {parsedParagraphs.map((p, i) => (
-                    <p key={i}>{p}</p>
-                  ))}
+          <div className="bg-card rounded-2xl p-6 sm:p-8 md:p-12 border border-border shadow-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              {/* Левая колонка: история и методика школы */}
+              <div className="lg:col-span-7 space-y-4 sm:space-y-5 text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  Австрийская методика
                 </div>
-              ) : (
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                  Мы гарантируем индивидуальное внимание за счет работы в небольших группах, где прогресс каждого ученика — наш главный приоритет. Наши тренеры — внимательные наставники, которые находят подход к каждому ребенку, помогая достигать вершин на склоне и в жизни.
+
+                <h3 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight leading-snug">
+                  Воспитываем чемпионов на склоне и в жизни
+                </h3>
+
+                <p className="text-base sm:text-lg text-foreground/90 font-medium leading-relaxed">
+                  {about?.description ||
+                    "«Вершина» — с 2001 года мы дарим детям любовь к горам и спорту, используя лучшие мировые практики — австрийскую методику обучения, признанную эталоном в горнолыжном мире."}
                 </p>
-              )}
-            </div>
 
-            {/* 3 Ключевых принципа */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 pt-4 border-t border-border">
-              <div className="flex items-start gap-3.5 p-4 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/30 transition-colors">
-                <div className="p-2.5 rounded-lg bg-primary/10 text-primary shrink-0">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-foreground text-sm sm:text-base mb-1">Безопасность</h3>
+                {parsedParagraphs.length > 0 && parsedParagraphs[0] !== about?.description && (
                   <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    Современная сертифицированная экипировка и постоянный контроль тренера на склоне.
+                    {parsedParagraphs[0]}
                   </p>
+                )}
+
+                <div className="pt-2 border-l-2 border-primary/40 pl-4 py-1 text-xs sm:text-sm text-muted-foreground italic">
+                  «Наша цель — не просто научить технике катания, а развить уверенность в себе, дисциплину и спортивный характер».
                 </div>
               </div>
 
-              <div className="flex items-start gap-3.5 p-4 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/30 transition-colors">
-                <div className="p-2.5 rounded-lg bg-primary/10 text-primary shrink-0">
-                  <Zap className="w-5 h-5" />
+              {/* Правая колонка: 3 ключевых принципа (вертикальные карточки) */}
+              <div className="lg:col-span-5 flex flex-col gap-3.5 sm:gap-4 text-left">
+                <div className="flex items-start gap-3.5 p-4 sm:p-4.5 rounded-xl bg-muted/40 border border-border/80 hover:border-primary/40 hover:bg-card transition-all shadow-xs">
+                  <div className="p-2.5 rounded-lg bg-primary/10 text-primary shrink-0 mt-0.5">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-foreground text-sm sm:text-base mb-1">Безопасность</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                      Сертифицированная экипировка, проверенные склоны и постоянный контроль наставника.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-foreground text-sm sm:text-base mb-1">Результат</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    Аттестации по австрийской шкале, регулярные старты и выполнение спортивных разрядов.
-                  </p>
-                </div>
-              </div>
 
-              <div className="flex items-start gap-3.5 p-4 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/30 transition-colors">
-                <div className="p-2.5 rounded-lg bg-primary/10 text-primary shrink-0">
-                  <HeartHandshake className="w-5 h-5" />
+                <div className="flex items-start gap-3.5 p-4 sm:p-4.5 rounded-xl bg-muted/40 border border-border/80 hover:border-primary/40 hover:bg-card transition-all shadow-xs">
+                  <div className="p-2.5 rounded-lg bg-primary/10 text-primary shrink-0 mt-0.5">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-foreground text-sm sm:text-base mb-1">Результат</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                      Аттестации по австрийской шкале, регулярные старты и выполнение спортивных разрядов.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-foreground text-sm sm:text-base mb-1">Команда</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    Дружный коллектив единомышленников, командный дух и выездные сборы.
-                  </p>
+
+                <div className="flex items-start gap-3.5 p-4 sm:p-4.5 rounded-xl bg-muted/40 border border-border/80 hover:border-primary/40 hover:bg-card transition-all shadow-xs">
+                  <div className="p-2.5 rounded-lg bg-primary/10 text-primary shrink-0 mt-0.5">
+                    <HeartHandshake className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-foreground text-sm sm:text-base mb-1">Команда</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                      Индивидуальное внимание за счет малых групп, сплоченный коллектив и выездные сборы.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
