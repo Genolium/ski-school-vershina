@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import ScrollReveal from "./ScrollReveal";
 import { getLocations, type Location } from "@/lib/api";
 import { logError } from "@/lib/errorHandler";
+import { parseSmartArray } from "@/lib/arrayParser";
 
 function iconFor(type?: string) {
   switch (type) {
@@ -74,13 +75,7 @@ const Locations = () => {
   const locations = items.length ? items : fallbackLocations;
 
   const parseFeatures = (f?: string) => {
-    if (!f) return [] as string[];
-    try {
-      const v = JSON.parse(f);
-      return Array.isArray(v) ? (v as string[]) : [];
-    } catch {
-      return [];
-    }
+    return parseSmartArray(f);
   };
 
   const getRouteUrl = (location: Location) => {

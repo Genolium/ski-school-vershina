@@ -61,7 +61,6 @@ const AdminTrainers = () => {
   const { data: coaches = [], isLoading, error } = useQuery({
     queryKey: ["admin-coaches"],
     queryFn: adminGetCoaches,
-    retry: 1,
   });
 
   const sortedCoaches = sortByOrder(coaches);

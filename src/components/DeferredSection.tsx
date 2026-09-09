@@ -47,24 +47,48 @@ const DeferredSection = ({
     }
 
     const element = containerRef.current;
-    if (!element) {
-      return;
+    let idleId: number | null = null;
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+
+    if (typeof window !== "undefined") {
+      if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(
+          () => {
+            setShouldLoad(true);
+          },
+          { timeout: 3000 }
+        );
+      } else {
+        timerId = setTimeout(() => {
+          setShouldLoad(true);
+        }, 2000);
+      }
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const hasIntersection = entries.some((entry) => entry.isIntersecting);
-        if (hasIntersection) {
-          setShouldLoad(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin },
-    );
+    let observer: IntersectionObserver | null = null;
+    if (element && typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(
+        (entries) => {
+          const hasIntersection = entries.some((entry) => entry.isIntersecting);
+          if (hasIntersection) {
+            setShouldLoad(true);
+            observer?.disconnect();
+          }
+        },
+        { rootMargin },
+      );
+      observer.observe(element);
+    }
 
-    observer.observe(element);
-
-    return () => observer.disconnect();
+    return () => {
+      observer?.disconnect();
+      if (idleId !== null && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timerId !== null) {
+        clearTimeout(timerId);
+      }
+    };
   }, [rootMargin, shouldLoad]);
 
   return (

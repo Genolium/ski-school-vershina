@@ -5,6 +5,7 @@ import { Check, ArrowRight } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
 import { getTariffs, type Tariff } from "@/lib/api";
 import { logError } from "@/lib/errorHandler";
+import { parseSmartArray } from "@/lib/arrayParser";
 
 const Tariffs = () => {
   const [tariffs, setTariffs] = useState<Tariff[]>([]);
@@ -29,13 +30,7 @@ const Tariffs = () => {
   };
 
   const parseFeatures = (features?: string): string[] => {
-    if (!features) return [];
-    try {
-      const parsed = JSON.parse(features);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
+    return parseSmartArray(features);
   };
 
   // Fallback данные если нет тарифов из API

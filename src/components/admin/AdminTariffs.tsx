@@ -32,6 +32,7 @@ import { ArrowUp, ArrowDown } from "lucide-react";
 import { TariffDialog } from "./TariffDialog";
 import { calculateSwappedOrders, calculateReorderedList, sortByOrder } from "@/lib/reorderUtils";
 import { DraggableTableRow, DragHandle } from "./DraggableTableRow";
+import { parseSmartArray, serializeSmartArray } from "@/lib/arrayParser";
 
 const AdminTariffs = () => {
   const queryClient = useQueryClient();
@@ -149,7 +150,7 @@ const AdminTariffs = () => {
     const data = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
-      features: formData.get("features") as string,
+      features: serializeSmartArray(parseSmartArray((formData.get("features") as string) || "")),
       price: formData.get("price") as string,
       is_active: formData.get("is_active") === "on",
       order: parseInt(formData.get("order") as string) || 0,

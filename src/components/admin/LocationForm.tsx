@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { type Location } from "@/lib/api";
 import { toast } from "sonner";
+import { ItemsArrayInput } from "./ItemsArrayInput";
+import { parseSmartArray, serializeSmartArray } from "@/lib/arrayParser";
 
 interface LocationFormProps {
   editingItem: Location | null;
@@ -65,7 +67,7 @@ export const LocationForm = ({
       title: formData.get("title") as string,
       address: formData.get("address") as string,
       description: formData.get("description") as string || "",
-      features: formData.get("features") as string || "",
+      features: serializeSmartArray(parseSmartArray((formData.get("features") as string) || "")),
       icon_type: iconType,
       latitude: latitude,
       longitude: longitude,
@@ -98,10 +100,20 @@ export const LocationForm = ({
           <Label htmlFor="description">Описание</Label>
           <Textarea id="description" name="description" defaultValue={editingItem?.description} />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="features">Особенности (JSON массив)</Label>
-          <Textarea id="features" name="features" defaultValue={editingItem?.features} placeholder='["Особенность 1", "Особенность 2"]' />
-        </div>
+        <ItemsArrayInput
+          name="features"
+          id="features"
+          label="Особенности локации"
+          defaultValue={editingItem?.features || "[]"}
+          presets={[
+            "Искусственный склон",
+            "Современное оборудование",
+            "Раздевалки",
+            "Безопасные трассы",
+            "Подъемники",
+            "Прокат оборудования",
+          ]}
+        />
         <div className="space-y-2">
           <Label htmlFor="route_url">Ссылка "Как добраться"</Label>
           <Input 

@@ -41,7 +41,7 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-fade-in">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-ski-white/10 border border-ski-white/20 text-ski-white text-xs sm:text-sm font-medium backdrop-blur-sm">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            Набор детей от 4 лет на сезон 2025/2026
+            Набор детей от 4 лет на сезон 2026/2027
           </div>
 
           <h1

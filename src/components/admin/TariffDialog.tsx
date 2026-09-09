@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { type Tariff } from "@/lib/api";
 import { useEffect } from "react";
+import { ItemsArrayInput } from "./ItemsArrayInput";
 
 interface TariffDialogProps {
   open: boolean;
@@ -72,21 +73,19 @@ export const TariffDialog = ({ open, onOpenChange, editingItem, onSubmit }: Tari
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="features" className="text-xs sm:text-sm">Особенности (JSON массив)</Label>
-            <Textarea
-              id="features"
-              name="features"
-              defaultValue={editingItem?.features || "[]"}
-              placeholder='["1 тренировка в неделю", "Акцент на удовольствие от катания"]'
-              required
-              rows={5}
-              className="text-sm sm:text-base font-mono"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Введите особенности в формате JSON массива строк
-            </p>
-          </div>
+          <ItemsArrayInput
+            name="features"
+            id="features"
+            label="Особенности тарифа"
+            defaultValue={editingItem?.features || "[]"}
+            presets={[
+              "1 тренировка в неделю",
+              "2 тренировки в неделю",
+              "3 тренировки в неделю",
+              "Индивидуальный график",
+              "Участие в соревнованиях",
+            ]}
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">

@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Mountain, Calendar, Users, Snowflake, ChevronLeft, ChevronRight } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
 import { getCamps, type Camp } from "@/lib/api";
+import { parseSmartArray } from "@/lib/arrayParser";
 
 const Camps = () => {
   const [camps, setCamps] = useState<Camp[]>([]);
@@ -89,13 +90,7 @@ const Camps = () => {
   };
 
   const parseList = (value?: string) => {
-    if (!value) return [] as string[];
-    try {
-      const v = JSON.parse(value);
-      return Array.isArray(v) ? (v as string[]) : [];
-    } catch {
-      return [];
-    }
+    return parseSmartArray(value);
   };
 
   return (
