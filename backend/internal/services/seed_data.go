@@ -32,64 +32,39 @@ func SeedInitialData() error {
 		}
 	}
 
-	// Заполнение локаций
-	locationFeatures1, _ := json.Marshal([]string{"Искусственный склон", "Современное оборудование", "Раздевалки"})
-	locationFeatures2, _ := json.Marshal([]string{"Безопасные трассы", "Профессиональная экипировка", "Групповые занятия"})
-	locationFeatures3, _ := json.Marshal([]string{"5 трасс разного уровня", "Подъемники", "Прокат оборудования"})
+	// Заполнение локаций (только если таблица пуста)
+	var existingLocationsCount int64
+	database.DB.Model(&models.Location{}).Count(&existingLocationsCount)
+	if existingLocationsCount == 0 {
+		locationFeatures1, _ := json.Marshal([]string{"Искусственный склон", "Современное оборудование", "Раздевалки"})
+		locationFeatures2, _ := json.Marshal([]string{"Безопасные трассы", "Профессиональная экипировка", "Групповые занятия"})
+		locationFeatures3, _ := json.Marshal([]string{"5 трасс разного уровня", "Подъемники", "Прокат оборудования"})
 
-	locations := []models.Location{
-		{Title: "Зал", Address: "ул. Брянцева 24", Description: "Специализированный зал для ОФП, начальной подготовки и отработки техники", Features: string(locationFeatures1), IconType: "MapPin", Latitude: 60.040836, Longitude: 30.406475, Order: 1},
-		{Title: "Велосипеды/Ролики", Address: "п. Токсово «Северный склон»", Description: "Летние тренировки на велосипедах и роликах для развития баланса и выносливости", Features: string(locationFeatures2), IconType: "Bike", Latitude: 60.156344, Longitude: 30.548292, Order: 2},
-		{Title: "Горные лыжи", Address: "ГК «Снежный»", Description: "Основные тренировки на горнолыжных склонах с ратраченными трассами", Features: string(locationFeatures3), IconType: "Mountain", Latitude: 60.521928, Longitude: 29.764144, Order: 3},
-	}
+		locations := []models.Location{
+			{Title: "Зал", Address: "ул. Брянцева 24", Description: "Специализированный зал для ОФП, начальной подготовки и отработки техники", Features: string(locationFeatures1), IconType: "MapPin", Latitude: 60.040836, Longitude: 30.406475, Order: 1},
+			{Title: "Велосипеды/Ролики", Address: "п. Токсово «Северный склон»", Description: "Летние тренировки на велосипедах и роликах для развития баланса и выносливости", Features: string(locationFeatures2), IconType: "Bike", Latitude: 60.156344, Longitude: 30.548292, Order: 2},
+			{Title: "Горные лыжи", Address: "ГК «Снежный»", Description: "Основные тренировки на горнолыжных склонах с ратраченными трассами", Features: string(locationFeatures3), IconType: "Mountain", Latitude: 60.521928, Longitude: 29.764144, Order: 3},
+		}
 
-	for _, location := range locations {
-		var count int64
-		database.DB.Model(&models.Location{}).Where("title = ?", location.Title).Count(&count)
-		if count == 0 {
+		for _, location := range locations {
 			if err := database.DB.Create(&location).Error; err != nil {
 				return err
 			}
 		}
 	}
 
-	// Обновление координат локаций (только если не установлены)
-	// Зал (ул. Брянцева 24)
-	database.DB.Model(&models.Location{}).
-		Where("(title LIKE ? OR address LIKE ?) AND (latitude = 0 OR latitude IS NULL)", "%Зал%", "%Брянцева%").
-		Updates(map[string]interface{}{
-			"latitude":  60.040836,
-			"longitude": 30.406475,
-		})
+	// Заполнение статистики (только если таблица пуста)
+	var existingStatsCount int64
+	database.DB.Model(&models.Statistic{}).Count(&existingStatsCount)
+	if existingStatsCount == 0 {
+		stats := []models.Statistic{
+			{Label: "лет работы", Value: "25", Suffix: "+", IconType: "Trophy", Order: 1},
+			{Label: "воспитанников", Value: "150", Suffix: "+", IconType: "Users", Order: 2},
+			{Label: "побед в сезоне", Value: "50", Suffix: "+", IconType: "Award", Order: 3},
+			{Label: "довольных родителей", Value: "100", Suffix: "%", IconType: "Target", Order: 4},
+		}
 
-	// Велосипеды/Ролики (п. Токсово «Северный склон»)
-	database.DB.Model(&models.Location{}).
-		Where("(title LIKE ? OR address LIKE ?) AND (latitude = 0 OR latitude IS NULL)", "%Токсово%", "%Токсово%").
-		Updates(map[string]interface{}{
-			"latitude":  60.156344,
-			"longitude": 30.548292,
-		})
-
-	// Горные лыжи (ГК «Снежный»)
-	database.DB.Model(&models.Location{}).
-		Where("(title LIKE ? OR address LIKE ?) AND (latitude = 0 OR latitude IS NULL)", "%Снежный%", "%Снежный%").
-		Updates(map[string]interface{}{
-			"latitude":  60.521928,
-			"longitude": 29.764144,
-		})
-
-	// Заполнение статистики
-	stats := []models.Statistic{
-		{Label: "лет работы", Value: "25", Suffix: "+", IconType: "Trophy", Order: 1},
-		{Label: "воспитанников", Value: "150", Suffix: "+", IconType: "Users", Order: 2},
-		{Label: "побед в сезоне", Value: "50", Suffix: "+", IconType: "Award", Order: 3},
-		{Label: "довольных родителей", Value: "100", Suffix: "%", IconType: "Target", Order: 4},
-	}
-
-	for _, stat := range stats {
-		var count int64
-		database.DB.Model(&models.Statistic{}).Where("label = ?", stat.Label).Count(&count)
-		if count == 0 {
+		for _, stat := range stats {
 			if err := database.DB.Create(&stat).Error; err != nil {
 				return err
 			}
@@ -152,51 +127,51 @@ func SeedInitialData() error {
 		}
 	}
 
-	// Заполнение тарифов
-	tariffFeatures1, _ := json.Marshal([]string{"1 тренировка в неделю", "Акцент на удовольствие"})
-	tariffFeatures2, _ := json.Marshal([]string{"2 тренировки в неделю", "Базовые навыки"})
-	tariffFeatures3, _ := json.Marshal([]string{"3 тренировки в неделю", "Интенсивная подготовка"})
-	tariffFeatures4, _ := json.Marshal([]string{"4+ тренировки в неделю", "Профессиональный уровень"})
+	// Заполнение тарифов (только если таблица пуста)
+	var existingTariffsCount int64
+	database.DB.Model(&models.Tariff{}).Count(&existingTariffsCount)
+	if existingTariffsCount == 0 {
+		tariffFeatures1, _ := json.Marshal([]string{"1 тренировка в неделю", "Акцент на удовольствие"})
+		tariffFeatures2, _ := json.Marshal([]string{"2 тренировки в неделю", "Базовые навыки"})
+		tariffFeatures3, _ := json.Marshal([]string{"3 тренировки в неделю", "Интенсивная подготовка"})
+		tariffFeatures4, _ := json.Marshal([]string{"4+ тренировки в неделю", "Профессиональный уровень"})
 
-	defaultTariffs := []models.Tariff{
-		{
-			Title:       "Active",
-			Description: "Для тех, кто хочет получать удовольствие от катания",
-			Features:    string(tariffFeatures1),
-			Price:       "6000 р/мес.",
-			IsActive:    true,
-			Order:       1,
-		},
-		{
-			Title:       "Sport",
-			Description: "Для тех, кто хочет развивать навыки",
-			Features:    string(tariffFeatures2),
-			Price:       "10000 р/мес.",
-			IsActive:    true,
-			Order:       2,
-		},
-		{
-			Title:       "Pro",
-			Description: "Для серьезных спортсменов",
-			Features:    string(tariffFeatures3),
-			Price:       "14000 р/мес.",
-			IsActive:    true,
-			Order:       3,
-		},
-		{
-			Title:       "Champion",
-			Description: "Максимальная подготовка для соревнований",
-			Features:    string(tariffFeatures4),
-			Price:       "18000 р/мес.",
-			IsActive:    true,
-			Order:       4,
-		},
-	}
+		defaultTariffs := []models.Tariff{
+			{
+				Title:       "Active",
+				Description: "Для тех, кто хочет получать удовольствие от катания",
+				Features:    string(tariffFeatures1),
+				Price:       "6000 р/мес.",
+				IsActive:    true,
+				Order:       1,
+			},
+			{
+				Title:       "Sport",
+				Description: "Для тех, кто хочет развивать навыки",
+				Features:    string(tariffFeatures2),
+				Price:       "10000 р/мес.",
+				IsActive:    true,
+				Order:       2,
+			},
+			{
+				Title:       "Pro",
+				Description: "Для серьезных спортсменов",
+				Features:    string(tariffFeatures3),
+				Price:       "14000 р/мес.",
+				IsActive:    true,
+				Order:       3,
+			},
+			{
+				Title:       "Champion",
+				Description: "Максимальная подготовка для соревнований",
+				Features:    string(tariffFeatures4),
+				Price:       "18000 р/мес.",
+				IsActive:    true,
+				Order:       4,
+			},
+		}
 
-	for _, tariff := range defaultTariffs {
-		var count int64
-		database.DB.Model(&models.Tariff{}).Where("title = ?", tariff.Title).Count(&count)
-		if count == 0 {
+		for _, tariff := range defaultTariffs {
 			if err := database.DB.Create(&tariff).Error; err != nil {
 				return err
 			}
