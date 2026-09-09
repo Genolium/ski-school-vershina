@@ -63,7 +63,7 @@ services:
       dockerfile: Dockerfile
       args:
         - VITE_API_URL=/api
-        - VITE_YANDEX_METRIKA_ID=${VITE_YANDEX_METRIKA_ID:-}
+        - VITE_YANDEX_METRIKA_ID=${VITE_YANDEX_METRIKA_ID:-105075135}
     container_name: ski-school-frontend
     ports:
       - "3001:80"

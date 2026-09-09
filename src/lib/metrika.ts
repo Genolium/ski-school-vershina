@@ -55,6 +55,8 @@ const scheduleInitialization = (counterId: string | number) => {
       webvisor: true,
       clickmap: true,
       ecommerce: "dataLayer",
+      referrer: typeof document !== "undefined" ? document.referrer : "",
+      url: typeof location !== "undefined" ? location.href : "",
       accurateTrackBounce: true,
       trackLinks: true,
     });
@@ -86,6 +88,21 @@ export const initYandexMetrika = (counterId: string | number) => {
 
   if (window.location.pathname.startsWith("/admin")) {
     return;
+  }
+
+  if (isInitialized) {
+    return;
+  }
+
+  const ymStub = window.ym as unknown as { a?: unknown[][] } | undefined;
+  if (ymStub?.a && Array.isArray(ymStub.a)) {
+    const alreadyInitted = ymStub.a.some(
+      (entry) => Array.isArray(entry) && String(entry[0]) === String(counterId) && entry[1] === "init"
+    );
+    if (alreadyInitted) {
+      isInitialized = true;
+      return;
+    }
   }
 
   scheduleInitialization(counterId);

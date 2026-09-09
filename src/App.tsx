@@ -11,7 +11,7 @@ const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicy"));
 const ConsentPage = lazy(() => import("./pages/Consent"));
 const NotFoundPage = lazy(() => import("./pages/NotFound"));
 
-const METRIKA_ID = import.meta.env.VITE_YANDEX_METRIKA_ID ?? "105075135";
+const METRIKA_ID = import.meta.env.VITE_YANDEX_METRIKA_ID || "105075135";
 
 const App = () => {
   const [isClientReady, setIsClientReady] = useState(false);
