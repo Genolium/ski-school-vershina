@@ -7,9 +7,9 @@ import (
 )
 
 func SeedInitialData() error {
-	// Заполнение групп расписания (проверяем отдельно для каждого типа данных)
+	// Заполнение групп расписания (только если таблица пуста, включая soft-deleted)
 	var existingScheduleCount int64
-	database.DB.Model(&models.ScheduleGroup{}).Count(&existingScheduleCount)
+	database.DB.Unscoped().Model(&models.ScheduleGroup{}).Count(&existingScheduleCount)
 	if existingScheduleCount == 0 {
 		scheduleGroups := []models.ScheduleGroup{
 			{Group: "Начальная подготовка", AgeRange: "4-6 лет", Days: "Вт, Чт", Time: "16:00 - 17:00", Location: "Зал (ул. Брянцева 24)", Spots: 5, IsActive: true, Order: 1},
@@ -19,22 +19,15 @@ func SeedInitialData() error {
 		}
 
 		for _, group := range scheduleGroups {
-			// Проверка существования по названию группы И возрастному диапазону для надежности
-			var count int64
-			database.DB.Model(&models.ScheduleGroup{}).
-				Where("group = ? AND age_range = ?", group.Group, group.AgeRange).
-				Count(&count)
-			if count == 0 {
-				if err := database.DB.Create(&group).Error; err != nil {
-					return err
-				}
+			if err := database.DB.Create(&group).Error; err != nil {
+				return err
 			}
 		}
 	}
 
-	// Заполнение локаций (только если таблица пуста)
+	// Заполнение локаций (только если таблица пуста, включая soft-deleted)
 	var existingLocationsCount int64
-	database.DB.Model(&models.Location{}).Count(&existingLocationsCount)
+	database.DB.Unscoped().Model(&models.Location{}).Count(&existingLocationsCount)
 	if existingLocationsCount == 0 {
 		locationFeatures1, _ := json.Marshal([]string{"Искусственный склон", "Современное оборудование", "Раздевалки"})
 		locationFeatures2, _ := json.Marshal([]string{"Безопасные трассы", "Профессиональная экипировка", "Групповые занятия"})
@@ -53,9 +46,9 @@ func SeedInitialData() error {
 		}
 	}
 
-	// Заполнение статистики (только если таблица пуста)
+	// Заполнение статистики (только если таблица пуста, включая soft-deleted)
 	var existingStatsCount int64
-	database.DB.Model(&models.Statistic{}).Count(&existingStatsCount)
+	database.DB.Unscoped().Model(&models.Statistic{}).Count(&existingStatsCount)
 	if existingStatsCount == 0 {
 		stats := []models.Statistic{
 			{Label: "лет работы", Value: "25", Suffix: "+", IconType: "Trophy", Order: 1},
@@ -71,7 +64,7 @@ func SeedInitialData() error {
 		}
 	}
 
-	// Заполнение сборов
+	// Заполнение сборов (только если таблица пуста, включая soft-deleted)
 	includedItems, _ := json.Marshal([]string{
 		"Проживание в комфортабельной гостинице",
 		"Трехразовое питание",
@@ -88,7 +81,7 @@ func SeedInitialData() error {
 	})
 
 	var campCount int64
-	database.DB.Model(&models.Camp{}).Count(&campCount)
+	database.DB.Unscoped().Model(&models.Camp{}).Count(&campCount)
 	if campCount == 0 {
 		camp := models.Camp{
 			Title:         "Сборы 2025/2026",
@@ -108,14 +101,14 @@ func SeedInitialData() error {
 		}
 	}
 
-	// Заполнение раздела "О нас"
+	// Заполнение раздела "О нас" (только если таблица пуста, включая soft-deleted)
 	paragraphs, _ := json.Marshal([]string{
 		"С 2001 года мы обучаем детей горнолыжному спорту по современной австрийской методике. Наша программа включает общую физическую подготовку, техническую подготовку на склоне и участие в соревнованиях.",
 		"Наши тренеры — мастера спорта и опытные педагоги, которые находят подход к каждому ребенку и помогают раскрыть его потенциал в спорте.",
 	})
 
 	var aboutCount int64
-	database.DB.Model(&models.AboutContent{}).Count(&aboutCount)
+	database.DB.Unscoped().Model(&models.AboutContent{}).Count(&aboutCount)
 	if aboutCount == 0 {
 		about := models.AboutContent{
 			Title:       "Школа горнолыжного спорта «Вершина»",
@@ -127,9 +120,9 @@ func SeedInitialData() error {
 		}
 	}
 
-	// Заполнение тарифов (только если таблица пуста)
+	// Заполнение тарифов (только если таблица пуста, включая soft-deleted)
 	var existingTariffsCount int64
-	database.DB.Model(&models.Tariff{}).Count(&existingTariffsCount)
+	database.DB.Unscoped().Model(&models.Tariff{}).Count(&existingTariffsCount)
 	if existingTariffsCount == 0 {
 		tariffFeatures1, _ := json.Marshal([]string{"1 тренировка в неделю", "Акцент на удовольствие"})
 		tariffFeatures2, _ := json.Marshal([]string{"2 тренировки в неделю", "Базовые навыки"})
