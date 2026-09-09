@@ -18,7 +18,9 @@ const Camps = () => {
     const timer = setTimeout(() => {
       getCamps()
         .then((data) => {
-          setCamps(data.filter((c) => c.is_active !== false));
+          const activeCamps = data.filter((c) => c.is_active !== false);
+          activeCamps.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+          setCamps(activeCamps);
           setLoading(false);
         })
         .catch(() => {

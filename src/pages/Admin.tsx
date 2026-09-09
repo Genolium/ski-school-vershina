@@ -15,6 +15,7 @@ import AdminStats from "@/components/admin/AdminStats";
 import AdminAbout from "@/components/admin/AdminAbout";
 import AdminTrainers from "@/components/admin/AdminTrainers";
 import AdminMedia from "@/components/admin/AdminMedia";
+import AdminLegal from "@/components/admin/AdminLegal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -186,6 +187,14 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
                 <Info className="w-4 h-4" />
                 <span>О нас</span>
               </TabsTrigger>
+
+              <TabsTrigger
+                value="legal"
+                className="flex items-center gap-1.5 text-xs sm:text-sm py-2 px-3 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Документы 152-ФЗ</span>
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -224,6 +233,10 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
 
           <TabsContent value="about" className="focus-visible:outline-none">
             <AdminAbout />
+          </TabsContent>
+
+          <TabsContent value="legal" className="focus-visible:outline-none">
+            <AdminLegal />
           </TabsContent>
         </Tabs>
       </main>

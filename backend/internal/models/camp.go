@@ -18,6 +18,7 @@ type Camp struct {
 	IncludedItems string         `gorm:"type:text" json:"included_items"` // JSON array as string
 	Stats         string         `gorm:"type:text" json:"stats"`          // JSON object as string
 	IsActive      bool           `gorm:"default:true" json:"is_active"`
+	Order         int            `gorm:"default:0" json:"order"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 	DeletedAt     gorm.DeletedAt `gorm:"index" json:"-"`

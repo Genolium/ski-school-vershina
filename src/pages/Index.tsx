@@ -6,6 +6,7 @@ import Tariffs from "@/components/Tariffs";
 import Locations from "@/components/Locations";
 import Camps from "@/components/Camps";
 import DeferredSection from "@/components/DeferredSection";
+import Footer from "@/components/Footer";
 
 const loadGallery = () => import("@/components/Gallery");
 const loadContactForm = () => import("@/components/ContactForm");
@@ -92,16 +93,7 @@ const Index = () => {
       </div>
 
       {/* Footer */}
-      <footer className="bg-ski-black text-ski-white py-6 md:py-8">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-ski-white/60 text-sm md:text-base">
-            © {new Date().getFullYear()} Школа горнолыжного спорта «Вершина». Все права защищены.
-          </p>
-          <address className="mt-2 text-ski-white/60 text-sm not-italic">
-            Санкт-Петербург
-          </address>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 };

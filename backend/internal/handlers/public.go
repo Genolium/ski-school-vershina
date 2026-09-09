@@ -82,7 +82,7 @@ func GetCamps(c *gin.Context) {
 	}
 
 	var camps []models.Camp
-	if err := database.DB.Where("is_active = ?", true).Order("created_at DESC").Find(&camps).Error; err != nil {
+	if err := database.DB.Where("is_active = ?", true).Order(database.GetOrderClause() + " ASC, created_at DESC").Find(&camps).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to fetch camps")
 		return
 	}
@@ -154,45 +154,4 @@ func GetCoaches(c *gin.Context) {
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Vary", "Accept-Encoding")
 	c.JSON(http.StatusOK, coaches)
-}
-
-type CreateApplicationRequest struct {
-	Name   string `json:"name" binding:"required"`
-	Phone  string `json:"phone" binding:"required"`
-	Age    string `json:"age"`
-	Tariff string `json:"tariff"`
-}
-
-func CreateApplication(c *gin.Context) {
-	var req CreateApplicationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		SafeErrorResponse(c, err, http.StatusBadRequest, "Invalid request format")
-		return
-	}
-
-	// Проверка длины строк
-	if !ValidateStringLength(req.Name, 1, 200) || !ValidateStringLength(req.Phone, 1, 50) {
-		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid data length")
-		return
-	}
-
-	application := models.Application{
-		Name:   req.Name,
-		Phone:  req.Phone,
-		Age:    req.Age,
-		Tariff: req.Tariff,
-		Status: models.StatusPending,
-	}
-
-	if err := database.DB.Create(&application).Error; err != nil {
-		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to create application")
-		return
-	}
-
-	// Отправка уведомления в Telegram (не блокируем ответ)
-	if cfg != nil {
-		go services.SendTelegramNotification(cfg, &application)
-	}
-
-	c.JSON(http.StatusCreated, application)
 }

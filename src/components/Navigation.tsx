@@ -6,6 +6,7 @@ const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const toggleButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,7 +19,12 @@ const Navigation = () => {
   // Закрытие мобильного меню при клике вне его
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(target) &&
+        !toggleButtonRef.current?.contains(target)
+      ) {
         setIsMobileMenuOpen(false);
       }
     };
@@ -65,6 +71,8 @@ const Navigation = () => {
     { label: "Тарифы", id: "tariffs" },
     { label: "Локации", id: "locations" },
     { label: "Сборы", id: "camps" },
+    { label: "Расписание", id: "schedule" },
+    { label: "Контакты", id: "contact-form" },
   ];
 
   return (
@@ -103,6 +111,7 @@ const Navigation = () => {
 
           {/* Mobile Menu Button */}
           <button
+            ref={toggleButtonRef}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden text-ski-white p-2.5 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ski-black rounded-md hover:bg-ski-white/10 transition-colors"
             aria-label={isMobileMenuOpen ? "Закрыть меню" : "Открыть меню"}

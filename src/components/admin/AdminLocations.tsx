@@ -12,17 +12,21 @@ import {
 import { toast } from "sonner";
 import { LocationForm } from "./LocationForm";
 import { LocationTable } from "./LocationTable";
+import { calculateSwappedOrders, sortByOrder } from "@/lib/reorderUtils";
 
 const AdminLocations = () => {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Location | null>(null);
   const [iconType, setIconType] = useState("MapPin");
+  const [isReordering, setIsReordering] = useState(false);
 
   const { data: locations = [], isLoading } = useQuery({
     queryKey: ["admin-locations"],
     queryFn: adminGetLocations,
   });
+
+  const sortedLocations = sortByOrder(locations);
 
   const createMutation = useMutation({
     mutationFn: createLocation,
@@ -63,6 +67,26 @@ const AdminLocations = () => {
       toast.error(error.message || "Ошибка при удалении локации");
     },
   });
+
+  const handleReorder = async (index: number, direction: 'up' | 'down') => {
+    const swap = calculateSwappedOrders(sortedLocations, index, direction);
+    if (!swap) return;
+
+    setIsReordering(true);
+    try {
+      await Promise.all([
+        updateLocation(swap.currentItem.id, { order: swap.currentItem.order }),
+        updateLocation(swap.targetItem.id, { order: swap.targetItem.order }),
+      ]);
+      await queryClient.invalidateQueries({ queryKey: ["admin-locations"] });
+      toast.success("Порядок изменен");
+    } catch (err) {
+      console.error("Failed to reorder locations:", err);
+      toast.error("Не удалось изменить порядок");
+    } finally {
+      setIsReordering(false);
+    }
+  };
 
   useEffect(() => {
     if (editingItem) {
@@ -141,9 +165,11 @@ const AdminLocations = () => {
         </div>
 
         <LocationTable
-          locations={locations}
+          locations={sortedLocations}
           onEdit={handleEdit}
           onDelete={(id) => deleteMutation.mutate(id)}
+          onReorder={handleReorder}
+          isReordering={isReordering}
         />
       </div>
     </>

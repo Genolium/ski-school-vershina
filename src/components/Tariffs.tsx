@@ -168,8 +168,9 @@ const Tariffs = () => {
                         variant={isPopular ? "hero" : "cta"} 
                         className="w-full group text-sm md:text-base h-11 md:h-12 touch-manipulation" 
                         onClick={scrollToForm}
+                        aria-label={`Выбрать тариф ${tariff.title}`}
                       >
-                        Записаться
+                        Выбрать тариф
                         <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </div>

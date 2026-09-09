@@ -8,6 +8,10 @@ const Hero = () => {
     document.getElementById("contact-form")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const scrollToAbout = () => {
+    document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image с оптимизацией */}
@@ -40,7 +44,10 @@ const Hero = () => {
             Набор детей от 4 лет на сезон 2025/2026
           </div>
 
-          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold text-ski-white leading-[1.15] tracking-tight px-2">
+          <h1
+            aria-label="Школа горнолыжного спорта «Вершина»"
+            className="text-3xl sm:text-5xl md:text-7xl font-bold text-ski-white leading-[1.15] tracking-tight px-2"
+          >
             Стань чемпионом с
             <br />
             <span className="text-primary bg-gradient-hero bg-clip-text text-transparent">
@@ -52,15 +59,25 @@ const Hero = () => {
             Профессиональное обучение детей горнолыжному спорту по австрийской методике с 2001 года
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center px-4 pt-2 md:pt-4 max-w-md mx-auto">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center px-4 pt-2 md:pt-4 max-w-xl mx-auto">
             <Button
               variant="hero"
               size="lg"
               onClick={scrollToForm}
               className="group w-full sm:w-auto text-sm sm:text-base h-12 sm:h-14 px-8 touch-manipulation shadow-ski"
+              aria-label="Записаться на тренировку"
             >
-              Записаться на занятие
+              Записаться на тренировку
               <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
+            </Button>
+
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={scrollToAbout}
+              className="bg-ski-white/10 border-ski-white/30 text-ski-white hover:bg-ski-white hover:text-ski-black backdrop-blur-sm w-full sm:w-auto text-sm sm:text-base h-12 sm:h-14 px-6 touch-manipulation"
+            >
+              Узнать подробнее
             </Button>
 
             <a href="tel:+79817428685" className="w-full sm:w-auto" aria-label="Позвонить тренеру по телефону +7 (981) 742-86-85">

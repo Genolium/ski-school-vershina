@@ -7,6 +7,8 @@ import { initYandexMetrika } from "@/lib/metrika";
 
 const IndexPage = lazy(() => import("./pages/Index"));
 const AdminPage = lazy(() => import("./pages/Admin"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicy"));
+const ConsentPage = lazy(() => import("./pages/Consent"));
 const NotFoundPage = lazy(() => import("./pages/NotFound"));
 
 const METRIKA_ID = import.meta.env.VITE_YANDEX_METRIKA_ID ?? "105075135";
@@ -53,6 +55,10 @@ const App = () => {
           <Routes>
             <Route path="/" element={<IndexPage />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/consent" element={<ConsentPage />} />
+            <Route path="/personal-data-consent" element={<ConsentPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

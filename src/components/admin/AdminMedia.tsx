@@ -46,7 +46,9 @@ import {
   type Media,
 } from "@/lib/api";
 import { toast } from "sonner";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import { resolveAssetUrl } from "@/lib/assets";
+import { calculateSwappedOrders, sortByOrder } from "@/lib/reorderUtils";
 
 const AdminMedia = () => {
   const queryClient = useQueryClient();
@@ -64,12 +66,15 @@ const AdminMedia = () => {
     is_active: true,
   });
   const [isUploading, setIsUploading] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
 
   const { data: media = [], isLoading, error } = useQuery<Media[]>({
     queryKey: ["admin-media"],
     queryFn: () => adminGetMedia(),
     retry: 1,
   });
+
+  const sortedMedia = sortByOrder(media);
 
   useEffect(() => {
     if (error) {
@@ -117,6 +122,26 @@ const AdminMedia = () => {
       toast.error(error.message || "Ошибка при удалении медиа");
     },
   });
+
+  const handleReorder = async (index: number, direction: 'up' | 'down') => {
+    const swap = calculateSwappedOrders(sortedMedia, index, direction);
+    if (!swap) return;
+
+    setIsReordering(true);
+    try {
+      await Promise.all([
+        updateMedia(swap.currentItem.id, { order: swap.currentItem.order }),
+        updateMedia(swap.targetItem.id, { order: swap.targetItem.order }),
+      ]);
+      await queryClient.invalidateQueries({ queryKey: ["admin-media"] });
+      toast.success("Порядок изменен");
+    } catch (err) {
+      console.error("Failed to reorder media:", err);
+      toast.error("Не удалось изменить порядок");
+    } finally {
+      setIsReordering(false);
+    }
+  };
 
   const resetForm = () => {
     setEditingItem(null);
@@ -245,20 +270,20 @@ const AdminMedia = () => {
             <TableHead>Тип</TableHead>
             <TableHead>Категория</TableHead>
             <TableHead>Дата</TableHead>
-            <TableHead>Порядок</TableHead>
+            <TableHead className="w-28 text-center">Порядок</TableHead>
             <TableHead>Статус</TableHead>
             <TableHead>Действия</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {media.length === 0 ? (
+          {sortedMedia.length === 0 ? (
             <TableRow>
               <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                 Медиа не добавлено
               </TableCell>
             </TableRow>
           ) : (
-            media.map((item) => (
+            sortedMedia.map((item, index) => (
               <TableRow key={item.id}>
                 <TableCell>
                   {item.media_type === "photo" ? (
@@ -277,7 +302,33 @@ const AdminMedia = () => {
                 <TableCell>{item.media_type === "photo" ? "Фото" : "Видео"}</TableCell>
                 <TableCell>{item.category}</TableCell>
                 <TableCell>{item.event_date ? new Date(item.event_date).toLocaleDateString("ru-RU") : "-"}</TableCell>
-                <TableCell>{item.order}</TableCell>
+                <TableCell className="text-center">
+                  <div className="inline-flex items-center gap-1 justify-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={index === 0 || isReordering}
+                      onClick={() => handleReorder(index, 'up')}
+                      title="Поднять выше"
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <span className="w-6 text-center font-mono text-sm font-semibold">
+                      {item.order ?? 0}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={index === sortedMedia.length - 1 || isReordering}
+                      onClick={() => handleReorder(index, 'down')}
+                      title="Опустить ниже"
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
                 <TableCell>{item.is_active ? "Активно" : "Неактивно"}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">

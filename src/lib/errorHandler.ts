@@ -1,3 +1,5 @@
+import { toast } from "@/hooks/use-toast";
+
 // Централизованный обработчик ошибок для фронтенда
 export class AppError extends Error {
   constructor(
@@ -40,4 +42,14 @@ export const handleApiError = (error: unknown): string => {
   
   return 'Произошла неизвестная ошибка. Попробуйте позже.';
 };
+
+export const showUserFriendlyError = (error: unknown, customMessage?: string): void => {
+  const message = customMessage || handleApiError(error);
+  toast({
+    title: "Ошибка",
+    description: message,
+    variant: "destructive",
+  });
+};
+
 

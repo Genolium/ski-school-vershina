@@ -28,7 +28,10 @@ import {
   type Tariff,
 } from "@/lib/api";
 import { toast } from "sonner";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import { TariffDialog } from "./TariffDialog";
+import { calculateSwappedOrders, calculateReorderedList, sortByOrder } from "@/lib/reorderUtils";
+import { DraggableTableRow, DragHandle } from "./DraggableTableRow";
 
 const AdminTariffs = () => {
   const queryClient = useQueryClient();
@@ -39,6 +42,50 @@ const AdminTariffs = () => {
     queryKey: ["admin-tariffs"],
     queryFn: adminGetTariffs,
   });
+
+  const sortedTariffs = sortByOrder(tariffs);
+
+  const reorderMutation = useMutation({
+    mutationFn: async (updates: { id: number; order: number }[]) => {
+      await Promise.all(
+        updates.map((u) => updateTariff(u.id, { order: u.order }))
+      );
+    },
+    onMutate: async (updates: { id: number; order: number }[]) => {
+      // 1. Immediately cancel outgoing queries
+      await queryClient.cancelQueries({ queryKey: ["admin-tariffs"] });
+
+      // 2. Snapshot previous value
+      const previousTariffs = queryClient.getQueryData<Tariff[]>(["admin-tariffs"]);
+
+      // 3. Optimistically update React Query cache
+      queryClient.setQueryData<Tariff[]>(["admin-tariffs"], (old) => {
+        if (!old) return [];
+        const updatesMap = new Map(updates.map((u) => [u.id, u.order]));
+        return old.map((t) =>
+          updatesMap.has(t.id) ? { ...t, order: updatesMap.get(t.id)! } : t
+        );
+      });
+
+      return { previousTariffs };
+    },
+    onError: (_err, _vars, context) => {
+      // Rollback cache to previous snapshot
+      if (context?.previousTariffs) {
+        queryClient.setQueryData(["admin-tariffs"], context.previousTariffs);
+      }
+      toast.error("Ошибка обновления");
+    },
+    onSuccess: () => {
+      toast.success("Порядок изменен");
+    },
+    onSettled: () => {
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ["admin-tariffs"] });
+    },
+  });
+
+  const isReordering = reorderMutation.isPending;
 
   const createMutation = useMutation({
     mutationFn: createTariff,
@@ -77,6 +124,24 @@ const AdminTariffs = () => {
       toast.error(error.message || "Ошибка при удалении тарифа");
     },
   });
+
+  const handleReorder = (index: number, direction: 'up' | 'down') => {
+    const swap = calculateSwappedOrders(sortedTariffs, index, direction);
+    if (!swap) return;
+
+    reorderMutation.mutate([
+      { id: swap.currentItem.id, order: swap.currentItem.order },
+      { id: swap.targetItem.id, order: swap.targetItem.order },
+    ]);
+  };
+
+  const handleDragReorder = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    const { changedItems } = calculateReorderedList(sortedTariffs, fromIndex, toIndex);
+    if (changedItems.length > 0) {
+      reorderMutation.mutate(changedItems);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -149,7 +214,7 @@ const AdminTariffs = () => {
         </Button>
       </div>
 
-      {tariffs.length === 0 ? (
+      {sortedTariffs.length === 0 ? (
         <div className="text-center py-8 text-sm sm:text-base text-muted-foreground">
           Тарифы не найдены. Добавьте первый тариф.
         </div>
@@ -162,18 +227,50 @@ const AdminTariffs = () => {
                 <TableHead className="hidden sm:table-cell text-xs sm:text-sm">Описание</TableHead>
                 <TableHead className="text-xs sm:text-sm">Стоимость</TableHead>
                 <TableHead className="hidden md:table-cell text-xs sm:text-sm">Активен</TableHead>
-                <TableHead className="hidden lg:table-cell text-xs sm:text-sm">Порядок</TableHead>
+                <TableHead className="w-36 text-center text-xs sm:text-sm">Порядок</TableHead>
                 <TableHead className="text-xs sm:text-sm">Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tariffs.map((item) => (
-                <TableRow key={item.id}>
+              {sortedTariffs.map((item, index) => (
+                <DraggableTableRow
+                  key={item.id}
+                  index={index}
+                  onReorder={handleDragReorder}
+                  disabled={isReordering}
+                >
                   <TableCell className="font-semibold text-xs sm:text-sm">{item.title}</TableCell>
                   <TableCell className="hidden sm:table-cell max-w-md truncate text-xs sm:text-sm">{item.description}</TableCell>
                   <TableCell className="font-semibold text-primary text-xs sm:text-sm">{item.price}</TableCell>
                   <TableCell className="hidden md:table-cell text-xs sm:text-sm">{item.is_active ? "Да" : "Нет"}</TableCell>
-                  <TableCell className="hidden lg:table-cell text-xs sm:text-sm">{item.order}</TableCell>
+                  <TableCell className="text-center">
+                    <div className="inline-flex items-center gap-1 justify-center">
+                      <DragHandle disabled={isReordering} />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        disabled={index === 0 || isReordering}
+                        onClick={() => handleReorder(index, 'up')}
+                        title="Поднять выше"
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                      <span className="w-6 text-center font-mono text-sm font-semibold">
+                        {item.order ?? 0}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        disabled={index === sortedTariffs.length - 1 || isReordering}
+                        onClick={() => handleReorder(index, 'down')}
+                        title="Опустить ниже"
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
                       <Button
@@ -210,7 +307,7 @@ const AdminTariffs = () => {
                       </AlertDialog>
                     </div>
                   </TableCell>
-                </TableRow>
+                </DraggableTableRow>
               ))}
             </TableBody>
           </Table>

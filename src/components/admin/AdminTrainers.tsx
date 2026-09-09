@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -40,6 +41,7 @@ import {
 } from "@/lib/api";
 import { toast } from "sonner";
 import { resolveAssetUrl } from "@/lib/assets";
+import { calculateSwappedOrders, sortByOrder } from "@/lib/reorderUtils";
 
 const AdminTrainers = () => {
   const queryClient = useQueryClient();
@@ -54,12 +56,15 @@ const AdminTrainers = () => {
     order: 0,
   });
   const [isUploading, setIsUploading] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
 
   const { data: coaches = [], isLoading, error } = useQuery({
     queryKey: ["admin-coaches"],
     queryFn: adminGetCoaches,
     retry: 1,
   });
+
+  const sortedCoaches = sortByOrder(coaches);
 
   useEffect(() => {
     if (error) {
@@ -126,6 +131,26 @@ const AdminTrainers = () => {
     },
   });
 
+  const handleReorder = async (index: number, direction: 'up' | 'down') => {
+    const swap = calculateSwappedOrders(sortedCoaches, index, direction);
+    if (!swap) return;
+
+    setIsReordering(true);
+    try {
+      await Promise.all([
+        updateCoach(swap.currentItem.id, { order: swap.currentItem.order }),
+        updateCoach(swap.targetItem.id, { order: swap.targetItem.order }),
+      ]);
+      await queryClient.invalidateQueries({ queryKey: ["admin-coaches"] });
+      toast.success("Порядок изменен");
+    } catch (err) {
+      console.error("Failed to reorder coaches:", err);
+      toast.error("Не удалось изменить порядок");
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
   const handleAdd = () => {
     try {
       setEditingItem(null);
@@ -177,12 +202,10 @@ const AdminTrainers = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Проверка, что форма не отправляется во время загрузки или других операций
     if (isUploading || createMutation.isPending || updateMutation.isPending) {
       return;
     }
 
-    // Валидация обязательных полей
     if (!formData.name.trim() || !formData.position.trim()) {
       toast.error("Заполните все обязательные поля");
       return;
@@ -190,7 +213,6 @@ const AdminTrainers = () => {
 
     let photoUrl = editingItem?.photo || "";
 
-    // Загрузка фото, если выбрано новое
     if (photoFile) {
       setIsUploading(true);
       try {
@@ -213,7 +235,6 @@ const AdminTrainers = () => {
       order: formData.order || 0,
     };
 
-    // Выполнение мутации после готовности
     if (editingItem) {
       updateMutation.mutate({ id: editingItem.id, data });
     } else {
@@ -236,10 +257,9 @@ const AdminTrainers = () => {
   return (
     <div className="space-y-4">
       <Dialog
-        key={`dialog-${isDialogOpen ? 'open' : 'closed'}-${editingItem?.id || 'new'}`}
+        key={`dialog-${isDialogOpen ? "open" : "closed"}-${editingItem?.id || "new"}`}
         open={isDialogOpen}
         onOpenChange={(open) => {
-          console.log("AdminTrainers Dialog onOpenChange:", open);
           setIsDialogOpen(open);
           if (!open) {
             setEditingItem(null);
@@ -264,7 +284,7 @@ const AdminTrainers = () => {
           <form onSubmit={handleSubmit} className="space-y-4" key={editingItem?.id || "new"}>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Имя</Label>
+                <Label htmlFor="name">Имя <span className="text-destructive">*</span></Label>
                 <Input
                   id="name"
                   name="name"
@@ -274,7 +294,7 @@ const AdminTrainers = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="position">Позиция</Label>
+                <Label htmlFor="position">Позиция <span className="text-destructive">*</span></Label>
                 <Input
                   id="position"
                   name="position"
@@ -297,13 +317,21 @@ const AdminTrainers = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="photo">Фото</Label>
+              <Label htmlFor="photo">Фото (JPG, PNG, WebP, HEIC до 25 МБ)</Label>
               <Input
                 id="photo"
                 type="file"
-                accept="image/*"
+                accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.jfif"
                 onChange={handlePhotoChange}
               />
+              {photoFile && (
+                <div className="text-xs text-muted-foreground">
+                  Выбран файл: <span className="font-medium text-foreground">{photoFile.name}</span> ({(photoFile.size / (1024 * 1024)).toFixed(2)} МБ)
+                  {photoFile.size > 25 * 1024 * 1024 && (
+                    <span className="text-destructive font-semibold ml-2">Внимание: размер превышает 25 МБ</span>
+                  )}
+                </div>
+              )}
               {photoPreview && (
                 <div className="mt-2">
                   <img
@@ -325,7 +353,7 @@ const AdminTrainers = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="order">Порядок</Label>
+              <Label htmlFor="order">Порядок (меньше = выше)</Label>
               <Input
                 id="order"
                 name="order"
@@ -368,19 +396,19 @@ const AdminTrainers = () => {
             <TableHead>Фото</TableHead>
             <TableHead>Имя</TableHead>
             <TableHead>Позиция</TableHead>
-            <TableHead>Порядок</TableHead>
+            <TableHead className="w-28 text-center">Порядок</TableHead>
             <TableHead>Действия</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {coaches.length === 0 ? (
+          {sortedCoaches.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                 Тренеры не добавлены
               </TableCell>
             </TableRow>
           ) : (
-            coaches.map((coach) => (
+            sortedCoaches.map((coach, index) => (
               <TableRow key={coach.id}>
                 <TableCell>
                   {coach.photo ? (
@@ -397,7 +425,33 @@ const AdminTrainers = () => {
                 </TableCell>
                 <TableCell className="font-medium">{coach.name}</TableCell>
                 <TableCell>{coach.position}</TableCell>
-                <TableCell>{coach.order}</TableCell>
+                <TableCell className="text-center">
+                  <div className="inline-flex items-center gap-1 justify-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={index === 0 || isReordering}
+                      onClick={() => handleReorder(index, 'up')}
+                      title="Поднять выше"
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <span className="w-6 text-center font-mono text-sm font-semibold">
+                      {coach.order ?? 0}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={index === sortedCoaches.length - 1 || isReordering}
+                      onClick={() => handleReorder(index, 'down')}
+                      title="Опустить ниже"
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <Button
@@ -443,4 +497,3 @@ const AdminTrainers = () => {
 };
 
 export default AdminTrainers;
-

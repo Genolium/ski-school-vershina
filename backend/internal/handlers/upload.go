@@ -11,10 +11,39 @@ import (
 	"ski-school-backend/internal/models"
 	"ski-school-backend/internal/services"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+// getUploadDir возвращает путь к папке загрузок (с поддержкой Docker volume и локального режима)
+func getUploadDir() string {
+	if dir := os.Getenv("UPLOAD_DIR"); dir != "" {
+		return dir
+	}
+	if fi, err := os.Stat("/app/data"); err == nil && fi.IsDir() {
+		return "/app/data/uploads"
+	}
+	return "./data/uploads"
+}
+
+// sanitizeFilename оставляет только безопасные символы в имени файла
+func sanitizeFilename(name string) string {
+	var b strings.Builder
+	for _, r := range name {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_' || r == '-' {
+			b.WriteRune(r)
+		} else if r == ' ' || r == '.' {
+			b.WriteRune('_')
+		}
+	}
+	res := b.String()
+	if len(res) > 40 {
+		res = res[:40]
+	}
+	return res
+}
 
 // ServeUploadedFile обрабатывает запросы на загруженные файлы с поддержкой старого и нового путей
 func ServeUploadedFile(c *gin.Context) {
@@ -39,26 +68,24 @@ func ServeUploadedFile(c *gin.Context) {
 
 	filename := filepath.Base(decodedPath)
 
-	// Сначала пробуем новый путь (в volume)
-	newPath := filepath.Join("/app/data/uploads", filename)
-	fmt.Printf("ServeUploadedFile: param=%s, decoded=%s, filename=%s, newPath=%s\n", filepathParam, decodedPath, filename, newPath)
-
-	if stat, err := os.Stat(newPath); err == nil && !stat.IsDir() {
-		c.File(newPath)
-		return
-	} else {
-		fmt.Printf("ServeUploadedFile: newPath not found or error: %v\n", err)
+	// Проверяем пути: активный getUploadDir(), Docker volume /app/data/uploads, локальный ./data/uploads и старый ./public/uploads
+	candidateDirs := []string{
+		getUploadDir(),
+		"/app/data/uploads",
+		"./data/uploads",
+		"./public/uploads",
 	}
 
-	// Если не найден, пробуем старый путь (для обратной совместимости)
-	oldPath := filepath.Join("./public/uploads", filename)
-	if stat, err := os.Stat(oldPath); err == nil && !stat.IsDir() {
-		c.File(oldPath)
-		return
+	for _, dir := range candidateDirs {
+		filePath := filepath.Join(dir, filename)
+		if stat, err := os.Stat(filePath); err == nil && !stat.IsDir() {
+			c.File(filePath)
+			return
+		}
 	}
 
 	// Если файл не найден ни в одном месте
-	fmt.Printf("ServeUploadedFile: file not found in newPath or oldPath\n")
+	fmt.Printf("ServeUploadedFile: file not found: %s\n", filename)
 	c.Status(http.StatusNotFound)
 }
 
@@ -70,9 +97,9 @@ func UploadFile(c *gin.Context) {
 		return
 	}
 
-	// Проверка типа файла
-	ext := filepath.Ext(file.Filename)
-	allowedExts := []string{".jpg", ".jpeg", ".png", ".gif", ".webp"}
+	// Проверка типа файла без учета регистра (.jpg, .JPG, .png, .PNG и т.д.)
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+	allowedExts := []string{".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif", ".jfif", ".svg"}
 	isAllowed := false
 	for _, allowedExt := range allowedExts {
 		if ext == allowedExt {
@@ -81,27 +108,31 @@ func UploadFile(c *gin.Context) {
 		}
 	}
 	if !isAllowed {
-		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid file type. Allowed: jpg, jpeg, png, gif, webp")
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "Invalid file type. Allowed: jpg, jpeg, png, gif, webp, heic")
 		return
 	}
 
-	// Проверка размера файла (максимум 5MB)
-	if file.Size > 5*1024*1024 {
-		SafeErrorResponse(c, nil, http.StatusBadRequest, "File too large. Maximum size: 5MB")
+	// Проверка размера файла (максимум 25MB)
+	if file.Size > 25*1024*1024 {
+		SafeErrorResponse(c, nil, http.StatusBadRequest, "File too large. Maximum size: 25MB")
 		return
 	}
 
 	// Создание директории для загрузок, если её нет
-	// Используем абсолютный путь для Docker контейнера
-	uploadDir := "/app/data/uploads"
+	uploadDir := getUploadDir()
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to create upload directory")
 		return
 	}
 
-	// Генерация уникального имени файла
-	timestamp := time.Now().Unix()
-	filename := fmt.Sprintf("%d_%s", timestamp, file.Filename)
+	// Генерация уникального безопасного имени файла
+	timestampMs := time.Now().UnixNano() / 1000000
+	baseRaw := strings.TrimSuffix(filepath.Base(file.Filename), filepath.Ext(file.Filename))
+	cleanBase := sanitizeFilename(baseRaw)
+	if cleanBase == "" {
+		cleanBase = "photo"
+	}
+	filename := fmt.Sprintf("%d_%s%s", timestampMs, cleanBase, ext)
 	filePath := filepath.Join(uploadDir, filename)
 
 	// Сохранение файла

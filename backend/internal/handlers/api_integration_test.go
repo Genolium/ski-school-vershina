@@ -315,6 +315,69 @@ func TestCreateApplication(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
+
+	t.Run("HoneypotSpamDropped", func(t *testing.T) {
+		spamPhone := "+79998887766"
+		reqBody := CreateApplicationRequest{
+			Name:    "Спам Бот",
+			Phone:   spamPhone,
+			Tariff:  "Active",
+			Website: "https://spam-link.xyz",
+		}
+		jsonData, _ := json.Marshal(reqBody)
+
+		req := httptest.NewRequest("POST", "/api/applications", bytes.NewBuffer(jsonData))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var resp map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Equal(t, "success", resp["status"])
+
+		// Verify that the honeypot spam was NOT saved to the database
+		var count int64
+		database.DB.Model(&models.Application{}).Where("phone = ?", spamPhone).Count(&count)
+		assert.Equal(t, int64(0), count)
+	})
+
+	t.Run("ConsentAndUTMParameters", func(t *testing.T) {
+		reqBody := CreateApplicationRequest{
+			Name:                 "Клиент с согласием",
+			Phone:                "+79997776655",
+			Tariff:               "Pro",
+			ConsentGiven:         true,
+			ConsentPolicyVersion: "v1.0",
+			UTMSource:            "yandex",
+			UTMMedium:            "cpc",
+			UTMCampaign:          "winter2026",
+			UTMContent:           "banner1",
+			UTMTerm:              "ski_school",
+		}
+		jsonData, _ := json.Marshal(reqBody)
+
+		req := httptest.NewRequest("POST", "/api/applications", bytes.NewBuffer(jsonData))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("User-Agent", "TestBrowser/1.0")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+		var application models.Application
+		err := json.Unmarshal(w.Body.Bytes(), &application)
+		assert.NoError(t, err)
+		assert.True(t, application.ConsentGiven)
+		assert.NotNil(t, application.ConsentTimestamp)
+		assert.Equal(t, "v1.0", application.ConsentPolicyVersion)
+		assert.Equal(t, "TestBrowser/1.0", application.UserAgent)
+		assert.Equal(t, "yandex", application.UTMSource)
+		assert.Equal(t, "cpc", application.UTMMedium)
+		assert.Equal(t, "winter2026", application.UTMCampaign)
+		assert.Equal(t, "banner1", application.UTMContent)
+		assert.Equal(t, "ski_school", application.UTMTerm)
+	})
 }
 
 func TestAdminLogin(t *testing.T) {

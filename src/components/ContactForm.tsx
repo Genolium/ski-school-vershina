@@ -9,6 +9,7 @@ import { createApplication, getTariffs, type Tariff } from "@/lib/api";
 import { reachGoal } from "@/lib/metrika";
 import { logError } from "@/lib/errorHandler";
 import { cn } from "@/lib/utils";
+import { getStoredUTMParams } from "@/lib/utm";
 
 const ContactForm = () => {
   const { toast } = useToast();
@@ -17,18 +18,22 @@ const ContactForm = () => {
     name: "",
     phone: "",
     tariff: "",
+    consent: false,
   });
   const [errors, setErrors] = useState({
     name: "",
     phone: "",
     tariff: "",
+    consent: "",
   });
   const [touched, setTouched] = useState({
     name: false,
     phone: false,
     tariff: false,
+    consent: false,
   });
   const [submitting, setSubmitting] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
 
   useEffect(() => {
     getTariffs()
@@ -263,28 +268,55 @@ const ContactForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Honeypot anti-spam check - silent anti-spam defense
+    if (honeypot) {
+      // Simulate immediate success for automated spam bots without hitting server
+      toast({
+        title: "Заявка отправлена!",
+        description: "Мы свяжемся с вами в ближайшее время.",
+      });
+
+      const liveRegion = document.getElementById('aria-live-region');
+      if (liveRegion) {
+        liveRegion.textContent = 'Заявка успешно отправлена. Мы свяжемся с вами в ближайшее время.';
+      }
+
+      setFormData({ name: "", phone: "", tariff: "", consent: false });
+      setHoneypot("");
+      setErrors({ name: "", phone: "", tariff: "", consent: "" });
+      setTouched({ name: false, phone: false, tariff: false, consent: false });
+      return;
+    }
     
     // Валидация всех полей перед отправкой
     const nameError = validateName(formData.name);
     const phoneError = validatePhone(formData.phone);
     const tariffError = validateTariff(formData.tariff);
+    const consentError = !formData.consent
+      ? "Необходимо подтвердить согласие на обработку персональных данных"
+      : "";
     
     setErrors({
       name: nameError,
       phone: phoneError,
       tariff: tariffError,
+      consent: consentError,
     });
     
     setTouched({
       name: true,
       phone: true,
       tariff: true,
+      consent: true,
     });
     
-    if (nameError || phoneError || tariffError) {
+    if (nameError || phoneError || tariffError || consentError) {
       toast({
         title: "Ошибка валидации",
-        description: "Пожалуйста, исправьте ошибки в форме",
+        description: consentError && !nameError && !phoneError && !tariffError
+          ? "Пожалуйста, подтвердите согласие на обработку персональных данных"
+          : "Пожалуйста, исправьте ошибки в форме",
         variant: "destructive",
       });
       return;
@@ -293,7 +325,17 @@ const ContactForm = () => {
     setSubmitting(true);
     
     try {
-      await createApplication(formData);
+      const utmParams = getStoredUTMParams();
+
+      await createApplication({
+        name: formData.name,
+        phone: formData.phone,
+        tariff: formData.tariff,
+        consent_given: true,
+        consent_policy_version: "2026.1",
+        consent_timestamp: new Date().toISOString(),
+        ...utmParams,
+      });
       
       // Отправка цели в Яндекс.Метрику
       const metrikaId = import.meta.env.VITE_YANDEX_METRIKA_ID || '105075135';
@@ -312,9 +354,10 @@ const ContactForm = () => {
         liveRegion.textContent = 'Заявка успешно отправлена. Мы свяжемся с вами в ближайшее время.';
       }
       
-      setFormData({ name: "", phone: "", tariff: "" });
-      setErrors({ name: "", phone: "", tariff: "" });
-      setTouched({ name: false, phone: false, tariff: false });
+      setFormData({ name: "", phone: "", tariff: "", consent: false });
+      setHoneypot("");
+      setErrors({ name: "", phone: "", tariff: "", consent: "" });
+      setTouched({ name: false, phone: false, tariff: false, consent: false });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Не удалось отправить заявку. Попробуйте позже.";
       
@@ -361,6 +404,20 @@ const ContactForm = () => {
           <ScrollReveal delay={100} className="h-full">
             <div className="bg-card border-2 border-border rounded-2xl p-6 sm:p-8 md:p-9 h-full flex flex-col shadow-sm">
               <form onSubmit={handleSubmit} className="flex flex-col h-full">
+                {/* Honeypot anti-spam field - invisible to humans */}
+                <div className="hidden" aria-hidden="true" style={{ display: 'none' }}>
+                  <label htmlFor="website">Website</label>
+                  <input
+                    type="text"
+                    id="website"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                  />
+                </div>
+
                 <div className="space-y-5 md:space-y-6 flex-1">
                   <div>
                     <Label htmlFor="name" className="text-sm md:text-base mb-1.5 md:mb-2 block">
@@ -479,14 +536,69 @@ const ContactForm = () => {
                   </div>
                 </div>
 
-                <div className="mt-auto pt-5 md:pt-6">
-                  <Button type="submit" variant="hero" size="lg" className="w-full text-sm md:text-base h-12 md:h-14 touch-manipulation" disabled={submitting}>
+                <div className="mt-auto pt-5 md:pt-6 space-y-4">
+                  {/* Чекбокс согласия на обработку персональных данных (пустой по умолчанию по требованиям РКН) */}
+                  <div>
+                    <label 
+                      htmlFor="consent-checkbox"
+                      className="flex items-start gap-2.5 cursor-pointer select-none group"
+                    >
+                      <input
+                        type="checkbox"
+                        id="consent-checkbox"
+                        checked={formData.consent}
+                        onChange={(e) => {
+                          const isChecked = e.target.checked;
+                          setFormData({ ...formData, consent: isChecked });
+                          if (touched.consent) {
+                            setErrors({
+                              ...errors,
+                              consent: isChecked ? "" : "Необходимо подтвердить согласие на обработку данных",
+                            });
+                          }
+                        }}
+                        className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background cursor-pointer accent-primary shrink-0 transition-colors"
+                      />
+                      <span className="text-xs text-muted-foreground leading-relaxed">
+                        Я даю согласие на{" "}
+                        <a
+                          href="/consent"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline font-medium underline-offset-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          обработку персональных данных
+                        </a>{" "}
+                        и соглашаюсь с{" "}
+                        <a
+                          href="/privacy"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline font-medium underline-offset-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          политикой конфиденциальности
+                        </a>
+                      </span>
+                    </label>
+                    {touched.consent && errors.consent && (
+                      <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                        {errors.consent}
+                      </p>
+                    )}
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    variant="hero" 
+                    size="lg" 
+                    className="w-full text-sm md:text-base h-12 md:h-14 touch-manipulation shadow-md" 
+                    disabled={submitting}
+                  >
                     {submitting ? "Отправка..." : "Записаться на пробное занятие"}
                   </Button>
-
-                  <p className="text-[10px] md:text-xs text-muted-foreground text-center leading-tight mt-3 px-2">
-                    Нажимая кнопку, вы соглашаетесь с политикой обработки персональных данных
-                  </p>
                 </div>
               </form>
             </div>

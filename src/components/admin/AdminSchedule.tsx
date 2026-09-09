@@ -28,17 +28,22 @@ import {
   type ScheduleGroup,
 } from "@/lib/api";
 import { toast } from "sonner";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import { ScheduleDialog } from "./ScheduleDialog";
+import { calculateSwappedOrders, sortByOrder } from "@/lib/reorderUtils";
 
 const AdminSchedule = () => {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ScheduleGroup | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
 
   const { data: schedule = [], isLoading } = useQuery({
     queryKey: ["admin-schedule"],
     queryFn: adminGetSchedule,
   });
+
+  const sortedSchedule = sortByOrder(schedule);
 
   const createMutation = useMutation({
     mutationFn: createSchedule,
@@ -77,6 +82,26 @@ const AdminSchedule = () => {
       toast.error(error.message || "Ошибка при удалении группы");
     },
   });
+
+  const handleReorder = async (index: number, direction: 'up' | 'down') => {
+    const swap = calculateSwappedOrders(sortedSchedule, index, direction);
+    if (!swap) return;
+
+    setIsReordering(true);
+    try {
+      await Promise.all([
+        updateSchedule(swap.currentItem.id, { order: swap.currentItem.order }),
+        updateSchedule(swap.targetItem.id, { order: swap.targetItem.order }),
+      ]);
+      await queryClient.invalidateQueries({ queryKey: ["admin-schedule"] });
+      toast.success("Порядок изменен");
+    } catch (err) {
+      console.error("Failed to reorder schedule:", err);
+      toast.error("Не удалось изменить порядок");
+    } finally {
+      setIsReordering(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -163,21 +188,56 @@ const AdminSchedule = () => {
             <TableHead>Места</TableHead>
             <TableHead>Стоимость</TableHead>
             <TableHead>Активна</TableHead>
+            <TableHead className="w-28 text-center">Порядок</TableHead>
             <TableHead>Действия</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {schedule.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell>{item.group}</TableCell>
-              <TableCell>{item.age_range}</TableCell>
-              <TableCell>{item.days}</TableCell>
-              <TableCell>{item.time}</TableCell>
-              <TableCell>{item.location}</TableCell>
-              <TableCell>{item.spots}</TableCell>
-              <TableCell>{item.price || "-"}</TableCell>
-              <TableCell>{item.is_active ? "Да" : "Нет"}</TableCell>
-              <TableCell>
+          {sortedSchedule.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                Группы не добавлены
+              </TableCell>
+            </TableRow>
+          ) : (
+            sortedSchedule.map((item, index) => (
+              <TableRow key={item.id}>
+                <TableCell>{item.group}</TableCell>
+                <TableCell>{item.age_range}</TableCell>
+                <TableCell>{item.days}</TableCell>
+                <TableCell>{item.time}</TableCell>
+                <TableCell>{item.location}</TableCell>
+                <TableCell>{item.spots}</TableCell>
+                <TableCell>{item.price || "-"}</TableCell>
+                <TableCell>{item.is_active ? "Да" : "Нет"}</TableCell>
+                <TableCell className="text-center">
+                  <div className="inline-flex items-center gap-1 justify-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={index === 0 || isReordering}
+                      onClick={() => handleReorder(index, 'up')}
+                      title="Поднять выше"
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <span className="w-6 text-center font-mono text-sm font-semibold">
+                      {item.order ?? 0}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={index === sortedSchedule.length - 1 || isReordering}
+                      onClick={() => handleReorder(index, 'down')}
+                      title="Опустить ниже"
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+                <TableCell>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -213,8 +273,9 @@ const AdminSchedule = () => {
                 </div>
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
+          ))
+        )}
+      </TableBody>
         </Table>
     </div>
   );

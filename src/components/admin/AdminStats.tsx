@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -44,18 +45,22 @@ import {
   deleteStat,
   type Statistic,
 } from "@/lib/api";
+import { calculateSwappedOrders, sortByOrder } from "@/lib/reorderUtils";
 
 const AdminStats = () => {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Statistic | null>(null);
   const [iconType, setIconType] = useState("Trophy");
+  const [isReordering, setIsReordering] = useState(false);
 
   const { data: stats = [], isLoading, error } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: adminGetStats,
     retry: 1,
   });
+
+  const sortedStats = sortByOrder(stats);
 
   useEffect(() => {
     if (error) {
@@ -103,6 +108,26 @@ const AdminStats = () => {
       toast.error(error.message || "Ошибка при удалении статистики");
     },
   });
+
+  const handleReorder = async (index: number, direction: 'up' | 'down') => {
+    const swap = calculateSwappedOrders(sortedStats, index, direction);
+    if (!swap) return;
+
+    setIsReordering(true);
+    try {
+      await Promise.all([
+        updateStat(swap.currentItem.id, { order: swap.currentItem.order }),
+        updateStat(swap.targetItem.id, { order: swap.targetItem.order }),
+      ]);
+      await queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+      toast.success("Порядок изменен");
+    } catch (err) {
+      console.error("Failed to reorder stats:", err);
+      toast.error("Не удалось изменить порядок");
+    } finally {
+      setIsReordering(false);
+    }
+  };
 
   useEffect(() => {
     if (editingItem) {
@@ -236,22 +261,50 @@ const AdminStats = () => {
             <TableHead>Значение</TableHead>
             <TableHead>Подпись</TableHead>
             <TableHead>Суффикс</TableHead>
+            <TableHead className="w-28 text-center">Порядок</TableHead>
             <TableHead>Действия</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {stats.length === 0 ? (
+          {sortedStats.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                 Статистика не добавлена
               </TableCell>
             </TableRow>
           ) : (
-            stats.map((item) => (
+            sortedStats.map((item, index) => (
             <TableRow key={item.id}>
               <TableCell>{item.value}</TableCell>
               <TableCell>{item.label}</TableCell>
               <TableCell>{item.suffix || ""}</TableCell>
+              <TableCell className="text-center">
+                <div className="inline-flex items-center gap-1 justify-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    disabled={index === 0 || isReordering}
+                    onClick={() => handleReorder(index, 'up')}
+                    title="Поднять выше"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <span className="w-6 text-center font-mono text-sm font-semibold">
+                    {item.order ?? 0}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    disabled={index === sortedStats.length - 1 || isReordering}
+                    onClick={() => handleReorder(index, 'down')}
+                    title="Опустить ниже"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
               <TableCell>
                 <div className="flex gap-2">
                   <Button 

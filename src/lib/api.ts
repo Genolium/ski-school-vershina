@@ -2,6 +2,7 @@
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 import { getAuthToken, authenticatedFetch, removeAuthToken } from './auth';
+import { prepareImageForUpload } from './imageUtils';
 
 export interface Application {
   id: number;
@@ -10,6 +11,29 @@ export interface Application {
   age?: string;
   tariff?: string;
   status: 'pending' | 'contacted' | 'completed' | 'cancelled';
+  notes?: string;
+  created_at: string;
+  consent_given?: boolean;
+  consent_timestamp?: string;
+  consent_policy_version?: string;
+  client_ip?: string;
+  user_agent?: string;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
+  website?: string;
+}
+
+export interface LegalDocumentAudit {
+  id: number;
+  document_type: 'privacy_policy' | 'consent' | string;
+  version: string;
+  title: string;
+  content: string;
+  changed_by: string;
+  change_summary: string;
   created_at: string;
 }
 
@@ -62,6 +86,7 @@ export interface Camp {
   included_items: string;
   stats: string;
   is_active: boolean;
+  order?: number;
 }
 
 export interface Statistic {
@@ -433,9 +458,18 @@ export async function deleteCoach(id: number): Promise<void> {
 export async function uploadPhoto(file: File): Promise<{ url: string }> {
   const token = getAuthToken();
   if (!token) throw new Error('Not authenticated');
+
+  // Оптимизируем изображение перед отправкой (сжатие больших фото со смартфонов, нормализация имени/расширения)
+  let processedFile = file;
+  try {
+    processedFile = await prepareImageForUpload(file);
+  } catch (e) {
+    console.warn('Image preprocessing failed, uploading original file:', e);
+    processedFile = file;
+  }
   
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('file', processedFile);
   
   const response = await fetch(`${ADMIN_API_URL}/upload`, {
     method: 'POST',
@@ -450,8 +484,23 @@ export async function uploadPhoto(file: File): Promise<{ url: string }> {
     removeAuthToken();
     throw new Error('UNAUTHORIZED');
   }
+
+  if (response.status === 413) {
+    throw new Error('Файл слишком большой. Максимальный размер 25 МБ.');
+  }
   
-  if (!response.ok) throw new Error('Failed to upload photo');
+  if (!response.ok) {
+    let errorDetail = 'Не удалось загрузить файл';
+    try {
+      const errorData = await response.json();
+      if (errorData?.error) {
+        errorDetail = errorData.error;
+      }
+    } catch {
+      // Игнорируем ошибку парсинга JSON если ответ в виде текста
+    }
+    throw new Error(errorDetail);
+  }
   return response.json();
 }
 

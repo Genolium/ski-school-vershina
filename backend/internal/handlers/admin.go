@@ -398,7 +398,7 @@ func AdminDeleteLocation(c *gin.Context) {
 // CRUD для сборов
 func AdminGetCamps(c *gin.Context) {
 	var camps []models.Camp
-	if err := database.DB.Order("created_at DESC").Find(&camps).Error; err != nil {
+	if err := database.DB.Order(database.GetOrderClause() + " ASC, created_at DESC").Find(&camps).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to fetch camps")
 		return
 	}
@@ -453,6 +453,7 @@ func AdminUpdateCamp(c *gin.Context) {
 		IncludedItems string `json:"included_items"`
 		Stats         string `json:"stats"`
 		IsActive      bool   `json:"is_active"`
+		Order         int    `json:"order"`
 		// Явно игнорируем ID из JSON, если он придет
 		ID            uint   `json:"id" binding:"-"`
 	}
@@ -484,6 +485,7 @@ func AdminUpdateCamp(c *gin.Context) {
 	camp.IncludedItems = updateData.IncludedItems
 	camp.Stats = updateData.Stats
 	camp.IsActive = updateData.IsActive
+	camp.Order = updateData.Order
 
 	if err := database.DB.Save(&camp).Error; err != nil {
 		SafeErrorResponse(c, err, http.StatusInternalServerError, "Failed to update camp")

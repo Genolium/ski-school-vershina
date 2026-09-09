@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -39,17 +40,55 @@ import {
   deleteCamp,
   type Camp,
 } from "@/lib/api";
+import { calculateSwappedOrders, calculateReorderedList, sortByOrder } from "@/lib/reorderUtils";
+import { DraggableTableRow, DragHandle } from "./DraggableTableRow";
 
 const AdminCamps = () => {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Camp | null>(null);
 
+  const reorderMutation = useMutation({
+    mutationFn: async (updates: { id: number; order: number }[]) => {
+      await Promise.all(
+        updates.map((u) => updateCamp(u.id, { order: u.order }))
+      );
+    },
+    onMutate: async (updates: { id: number; order: number }[]) => {
+      await queryClient.cancelQueries({ queryKey: ["admin-camps"] });
+      const previousCamps = queryClient.getQueryData<Camp[]>(["admin-camps"]);
+      queryClient.setQueryData<Camp[]>(["admin-camps"], (old) => {
+        if (!old) return [];
+        const updatesMap = new Map(updates.map((u) => [u.id, u.order]));
+        return old.map((c) =>
+          updatesMap.has(c.id) ? { ...c, order: updatesMap.get(c.id)! } : c
+        );
+      });
+      return { previousCamps };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousCamps) {
+        queryClient.setQueryData(["admin-camps"], context.previousCamps);
+      }
+      toast.error("Ошибка обновления");
+    },
+    onSuccess: () => {
+      toast.success("Порядок изменен");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-camps"] });
+    },
+  });
+
+  const isReordering = reorderMutation.isPending;
+
   const { data: camps = [], isLoading, error } = useQuery({
     queryKey: ["admin-camps"],
     queryFn: adminGetCamps,
     retry: 1,
   });
+
+  const sortedCamps = sortByOrder(camps);
 
   useEffect(() => {
     if (error) {
@@ -96,9 +135,28 @@ const AdminCamps = () => {
     },
   });
 
+  const handleReorder = (index: number, direction: 'up' | 'down') => {
+    const swap = calculateSwappedOrders(sortedCamps, index, direction);
+    if (!swap) return;
+
+    reorderMutation.mutate([
+      { id: swap.currentItem.id, order: swap.currentItem.order },
+      { id: swap.targetItem.id, order: swap.targetItem.order },
+    ]);
+  };
+
+  const handleDragReorder = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    const { changedItems } = calculateReorderedList(sortedCamps, fromIndex, toIndex);
+    if (changedItems.length > 0) {
+      reorderMutation.mutate(changedItems);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    const orderVal = parseInt(formData.get("order") as string, 10);
     const data = {
       title: formData.get("title") as string,
       location: formData.get("location") as string,
@@ -110,6 +168,7 @@ const AdminCamps = () => {
       training_desc: formData.get("training_desc") as string || "",
       included_items: formData.get("included_items") as string || "",
       stats: formData.get("stats") as string || "",
+      order: isNaN(orderVal) ? 0 : orderVal,
       is_active: formData.get("is_active") === "on",
     };
 
@@ -198,9 +257,20 @@ const AdminCamps = () => {
                 <Label htmlFor="stats">Статистика (JSON объект)</Label>
                 <Textarea id="stats" name="stats" defaultValue={editingItem?.stats} placeholder='{"camps_count": "5", "participants": "80+"}' />
               </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="is_active" name="is_active" defaultChecked={editingItem?.is_active !== false} />
-                <Label htmlFor="is_active">Активны</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="order">Порядок отображения (меньше = выше)</Label>
+                  <Input
+                    id="order"
+                    name="order"
+                    type="number"
+                    defaultValue={editingItem?.order ?? 0}
+                  />
+                </div>
+                <div className="flex items-center space-x-2 pt-6">
+                  <Checkbox id="is_active" name="is_active" defaultChecked={editingItem?.is_active !== false} />
+                  <Label htmlFor="is_active">Активны</Label>
+                </div>
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -229,6 +299,7 @@ const AdminCamps = () => {
         <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-36 text-center">Порядок</TableHead>
             <TableHead>Название</TableHead>
             <TableHead>Локация</TableHead>
             <TableHead>Даты</TableHead>
@@ -237,16 +308,49 @@ const AdminCamps = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {camps.length === 0 ? (
+          {sortedCamps.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                 Сборы не добавлены
               </TableCell>
             </TableRow>
           ) : (
-            camps.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell>{item.title}</TableCell>
+            sortedCamps.map((item, index) => (
+            <DraggableTableRow
+              key={item.id}
+              index={index}
+              onReorder={handleDragReorder}
+              disabled={isReordering}
+            >
+              <TableCell className="text-center">
+                <div className="inline-flex items-center gap-1 justify-center">
+                  <DragHandle disabled={isReordering} />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    disabled={index === 0 || isReordering}
+                    onClick={() => handleReorder(index, 'up')}
+                    title="Поднять выше"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <span className="w-6 text-center font-mono text-sm font-semibold">
+                    {item.order ?? 0}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    disabled={index === sortedCamps.length - 1 || isReordering}
+                    onClick={() => handleReorder(index, 'down')}
+                    title="Опустить ниже"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+              <TableCell className="font-medium">{item.title}</TableCell>
               <TableCell>{item.location}</TableCell>
               <TableCell>{item.dates}</TableCell>
               <TableCell>{item.is_active ? "Да" : "Нет"}</TableCell>
@@ -256,9 +360,9 @@ const AdminCamps = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => { 
-                      setEditingItem(item);
-                      setIsDialogOpen(true);
-                    }}
+                    setEditingItem(item);
+                    setIsDialogOpen(true);
+                  }}
                   >
                     Редактировать
                   </Button>
@@ -283,7 +387,7 @@ const AdminCamps = () => {
                   </AlertDialog>
                 </div>
               </TableCell>
-            </TableRow>
+            </DraggableTableRow>
             ))
           )}
         </TableBody>

@@ -51,6 +51,7 @@ func InitDB(cfgParam *config.Config) error {
 		&models.AboutContent{},
 		&models.Coach{},
 		&models.Media{},
+		&models.LegalDocumentAudit{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to migrate database: %w", err)
@@ -79,6 +80,7 @@ func addIndexes() error {
 		{"locations", "\"order\""},
 		{"camps", "is_active"},
 		{"camps", "created_at"},
+		{"camps", "\"order\""},
 		{"refresh_tokens", "expires_at"},
 		{"refresh_tokens", "user_id"},
 		{"coaches", "\"order\""},
